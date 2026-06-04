@@ -5,10 +5,6 @@
 > Upload a palm photo → visual report (health tips + entertainment palmistry). **Non-diagnostic.**  
 > 上传手掌照片 → 视觉报告（健康科普 + 趣味手相）。**非诊断。**
 
-<p align="center">
-  <a href="https://palmlens.vercel.app"><strong>Live demo · 在线演示</strong></a>
-</p>
-
 <!-- GitHub 仓库首页展示图：以下图片会显示在 GitHub 项目页顶部 -->
 <p align="center">
   <img src="docs/images/github-showcase.png" alt="PalmLens app: upload, preview, scores, health report" width="100%" />
@@ -183,7 +179,7 @@ cd frontend && npm run lint && npm run build
 | Frontend | Vercel | Root: `frontend` |
 | Backend | Render | `render.yaml`, Docker, `/health` |
 
-Set `NEXT_PUBLIC_API_URL` on Vercel and `ALLOWED_ORIGINS` on Render (comma-separated frontend URLs).
+Set `NEXT_PUBLIC_API_URL` on Vercel and `ALLOWED_ORIGINS` on Render (comma-separated frontend URLs). Use your own deployment URL — **`https://palmlens.vercel.app` is a different site and is not this repository.**
 
 ### Regenerate analyzer preview images
 
@@ -261,7 +257,7 @@ cd frontend && npm run lint && npm run build
 
 Vercel 配置 `NEXT_PUBLIC_API_URL`；Render 配置 `ALLOWED_ORIGINS`（多个域名英文逗号分隔）。本地 `localhost:3000` 默认已放行。
 
-线上示例：https://palmlens.vercel.app
+部署后使用你自己的 Vercel 域名（不要使用他人占用的 `palmlens.vercel.app`，该站点与本文库无关）。
 
 ### 更新 GitHub 配图
 
