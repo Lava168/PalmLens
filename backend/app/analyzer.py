@@ -962,39 +962,64 @@ def _build_palmistry_reading(
         color_note = "红色区域不突出，娱乐解读里会被视作节奏较稳的视觉符号"
 
     confidence = float(np.clip(clarity * 0.55 + min(edge_density / 0.08, 1) * 24 + min(palm_ratio / 0.22, 1) * 21, 0, 100))
+    archetype = _palmistry_archetype(clarity, brightness, redness["attention_level"])
+    keywords = _palmistry_keywords(clarity, brightness, redness["attention_level"], color["tone"])
+    life_score = round(float(np.clip(clarity * 0.5 + brightness * 30 + palm_ratio * 90, 0, 100)), 1)
+    head_score = round(float(np.clip(clarity * 0.62 + min(edge_density / 0.08, 1) * 38, 0, 100)), 1)
+    heart_score = round(float(np.clip(clarity * 0.45 + redness_index * 34 + brightness * 21, 0, 100)), 1)
+    career_score = round(
+        float(np.clip(clarity * 0.54 + min(edge_density / 0.1, 1) * 26 + (1 - abs(brightness - 0.62)) * 20, 0, 100)),
+        1,
+    )
 
     return {
         "title": "趣味手相解读",
-        "summary": f"这张手掌照片中，掌纹呈现{line_style}，{color_mood}；{color_note}。",
+        "summary": f"这张手掌照片中，掌纹呈现{line_style}，{color_mood}；{color_note}。整体娱乐设定可写成「{archetype}」。",
+        "archetype": archetype,
+        "keywords": keywords,
         "confidence_label": _palmistry_confidence_label(confidence),
         "confidence_score": round(confidence, 1),
         "disclaimer": PALMISTRY_DISCLAIMER,
         "lines": [
             {
                 "name": "生命线",
-                "score": round(float(np.clip(clarity * 0.5 + brightness * 30 + palm_ratio * 90, 0, 100)), 1),
+                "score": life_score,
                 "theme": f"{energy_word}感",
                 "detail": _palmistry_life_line(clarity, brightness, palm_ratio),
+                "visual_basis": _palmistry_life_basis(clarity, brightness, palm_ratio),
+                "entertainment_advice": _palmistry_life_advice(clarity, brightness, palm_ratio),
             },
             {
                 "name": "智慧线",
-                "score": round(float(np.clip(clarity * 0.62 + min(edge_density / 0.08, 1) * 38, 0, 100)), 1),
+                "score": head_score,
                 "theme": "思考节奏",
                 "detail": _palmistry_head_line(clarity, edge_density),
+                "visual_basis": _palmistry_head_basis(clarity, edge_density),
+                "entertainment_advice": _palmistry_head_advice(clarity, edge_density),
             },
             {
                 "name": "感情线",
-                "score": round(float(np.clip(clarity * 0.45 + redness_index * 34 + brightness * 21, 0, 100)), 1),
+                "score": heart_score,
                 "theme": "表达温度",
                 "detail": _palmistry_heart_line(redness["attention_level"], redness_index, brightness),
+                "visual_basis": _palmistry_heart_basis(redness["attention_level"], redness_index, brightness),
+                "entertainment_advice": _palmistry_heart_advice(redness["attention_level"], brightness),
             },
             {
                 "name": "事业线",
-                "score": round(float(np.clip(clarity * 0.54 + min(edge_density / 0.1, 1) * 26 + (1 - abs(brightness - 0.62)) * 20, 0, 100)), 1),
+                "score": career_score,
                 "theme": "推进方式",
                 "detail": _palmistry_career_line(clarity, edge_density, color["tone"]),
+                "visual_basis": _palmistry_career_basis(clarity, edge_density, color["tone"]),
+                "entertainment_advice": _palmistry_career_advice(clarity, edge_density, color["tone"]),
             },
         ],
+        "overall_advice": _palmistry_overall_advice(clarity, brightness, redness["attention_level"], archetype),
+        "relationship_advice": _palmistry_relationship_advice(redness["attention_level"], brightness),
+        "work_rhythm_advice": _palmistry_work_rhythm_advice(clarity, edge_density, color["tone"]),
+        "daily_rhythm_advice": _palmistry_daily_rhythm_advice(clarity, brightness),
+        "photo_tips": _palmistry_photo_tips(confidence, brightness, palm_ratio),
+        "share_copy": f"PalmLens 趣味手相：{archetype}｜关键词：{' / '.join(keywords[:3])}。仅供娱乐，不用于现实判断。",
         "lifestyle_notes": [
             "把这部分当成互动娱乐卡片，适合截图分享，不用于做现实判断。",
             "若想得到更清晰的手相卡片，可在自然光下平展掌心并避免强反光。",
@@ -1010,12 +1035,76 @@ def _palmistry_confidence_label(score: float) -> str:
     return "图像可读性偏弱"
 
 
+def _palmistry_archetype(clarity: float, brightness: float, attention_level: str) -> str:
+    if clarity >= 66 and attention_level == "明显":
+        return "行动外放型"
+    if clarity >= 66:
+        return "稳步推进型"
+    if attention_level in {"轻度", "明显"} and brightness >= 0.5:
+        return "热感表达型"
+    if clarity < 40 and brightness < 0.46:
+        return "慢热留白型"
+    if clarity < 40:
+        return "直觉感受型"
+    return "平衡观察型"
+
+
+def _palmistry_keywords(clarity: float, brightness: float, attention_level: str, tone: str) -> list[str]:
+    keywords: list[str] = []
+    if clarity >= 66:
+        keywords.extend(["清晰目标", "稳定推进"])
+    elif clarity >= 40:
+        keywords.extend(["平衡节奏", "慢慢成形"])
+    else:
+        keywords.extend(["直觉留白", "轻盈调整"])
+
+    if attention_level == "明显":
+        keywords.extend(["行动感", "表达力"])
+    elif attention_level == "轻度":
+        keywords.append("温度感")
+    else:
+        keywords.append("沉稳感")
+
+    if brightness >= 0.72:
+        keywords.append("明亮感")
+    elif brightness < 0.46:
+        keywords.append("低调感")
+
+    if tone == "偏暖黄":
+        keywords.append("暖调氛围")
+    elif tone == "偏淡":
+        keywords.append("轻柔氛围")
+
+    return list(dict.fromkeys(keywords))[:5]
+
+
 def _palmistry_life_line(clarity: float, brightness: float, palm_ratio: float) -> str:
     if clarity >= 66 and palm_ratio >= 0.12:
         return "娱乐解读中，生命线呈现清楚而有支撑的观感，像是偏稳定、能量续航感不错的设定。"
     if brightness < 0.42:
         return "画面偏暗，生命线细节不够充分，娱乐解读更适合描述为慢热、需要留白的节奏。"
     return "生命线细节呈现中等，娱乐解读里可理解为节奏平稳，适合持续积累型的状态。"
+
+
+def _palmistry_life_basis(clarity: float, brightness: float, palm_ratio: float) -> str:
+    return (
+        f"参考掌纹清晰度 {clarity:.0f}/100、画面亮度 {brightness * 100:.0f}%、掌心画面占比 "
+        f"{palm_ratio * 100:.1f}%。这些数值只用于生成娱乐卡片的视觉描述。"
+    )
+
+
+def _palmistry_life_advice(clarity: float, brightness: float, palm_ratio: float) -> list[str]:
+    advice = [
+        "可以把生命线写成“个人节奏感”的娱乐符号，用来表达今天适合稳住步调。",
+        "适合搭配一条轻松的状态文案，例如先把重要的小事完成，再给自己留一点缓冲。"
+    ]
+    if clarity >= 66 and palm_ratio >= 0.12:
+        advice.append("掌纹更清楚时，分享卡片可以强调持续感和耐心积累的氛围。")
+    elif brightness < 0.42:
+        advice.append("画面偏暗时，建议把解读写得更温和，避免使用绝对化判断。")
+    else:
+        advice.append("当前适合走平稳叙事，少用夸张词，把重点放在节奏和陪伴感上。")
+    return advice
 
 
 def _palmistry_head_line(clarity: float, edge_density: float) -> str:
@@ -1026,6 +1115,27 @@ def _palmistry_head_line(clarity: float, edge_density: float) -> str:
     return "智慧线可见度适中，娱乐解读里适合描述为理性与直觉之间比较平衡。"
 
 
+def _palmistry_head_basis(clarity: float, edge_density: float) -> str:
+    return f"参考掌纹清晰度 {clarity:.0f}/100 与边缘密度 {edge_density:.3f}，用于估计照片中纹理层次是否丰富。"
+
+
+def _palmistry_head_advice(clarity: float, edge_density: float) -> list[str]:
+    if clarity >= 60 and edge_density >= 0.045:
+        return [
+            "娱乐设定里可以把智慧线写成“拆解型思路”，适合配合清单、步骤、复盘这类关键词。",
+            "分享文案可以偏简洁利落，突出把复杂问题拆小的画面感。"
+        ]
+    if clarity < 38:
+        return [
+            "娱乐设定里可以把智慧线写成“直觉先行”，适合搭配灵感、感受、慢慢整理这类关键词。",
+            "如果想让这条线更有表现力，重拍时可让掌心更靠近镜头并减少阴影。"
+        ]
+    return [
+        "娱乐设定里可以把智慧线写成“理性与直觉并行”，适合表达先观察再行动的节奏。",
+        "这类卡片适合做温和建议，不适合写成确定性的判断。"
+    ]
+
+
 def _palmistry_heart_line(attention_level: str, redness_index: float, brightness: float) -> str:
     if attention_level == "明显" or redness_index >= 0.34:
         return "感情线区域的暖色存在感较强，娱乐解读里像是表达直接、情绪能量比较外放。"
@@ -1034,12 +1144,138 @@ def _palmistry_heart_line(attention_level: str, redness_index: float, brightness
     return "感情线呈现克制的视觉氛围，娱乐解读里可理解为慢热、重视安全感。"
 
 
+def _palmistry_heart_basis(attention_level: str, redness_index: float, brightness: float) -> str:
+    return (
+        f"参考局部红色关注等级「{attention_level}」、发红指数 {redness_index * 100:.0f}、"
+        f"画面亮度 {brightness * 100:.0f}%。这里只把暖色当作娱乐表达符号。"
+    )
+
+
+def _palmistry_heart_advice(attention_level: str, brightness: float) -> list[str]:
+    if attention_level == "明显":
+        return [
+            "娱乐设定里可以把感情线写成“表达更直接”，适合配合热情、坦率、现场感这类词。",
+            "文案里建议保留边界感，避免写成对关系走向的判断。"
+        ]
+    if brightness >= 0.72:
+        return [
+            "画面明亮时，感情线卡片可以偏轻快，适合写成舒服、开放、愿意沟通的氛围。",
+            "适合用作社交分享里的互动标签，而不是现实关系建议。"
+        ]
+    return [
+        "娱乐设定里可以把感情线写成慢热和重视安全感的氛围。",
+        "如果想让感情线更清楚，可换到柔和自然光下拍摄，减少掌心阴影。"
+    ]
+
+
 def _palmistry_career_line(clarity: float, edge_density: float, tone: str) -> str:
     if clarity >= 62 and edge_density >= 0.042:
         return "事业线相关纹理更有方向感，娱乐解读里像是目标感较明确、推进力较强。"
     if tone == "光线偏暗":
         return "当前光线让事业线不够突出，娱乐解读更适合描述为低调积累、先观察再行动。"
     return "事业线呈现中性观感，娱乐解读里适合写成稳步推进、靠长期习惯建立优势。"
+
+
+def _palmistry_career_basis(clarity: float, edge_density: float, tone: str) -> str:
+    return f"参考掌纹清晰度 {clarity:.0f}/100、边缘密度 {edge_density:.3f} 和掌色氛围「{tone}」，生成推进方式类娱乐文本。"
+
+
+def _palmistry_career_advice(clarity: float, edge_density: float, tone: str) -> list[str]:
+    if clarity >= 62 and edge_density >= 0.042:
+        return [
+            "娱乐设定里可以把事业线写成“目标路线更明确”，适合配合项目、计划、推进这类关键词。",
+            "建议文案聚焦可执行的小目标，不写成事业成败或未来结果。"
+        ]
+    if tone == "光线偏暗":
+        return [
+            "画面偏暗时，事业线适合写成低调积累和观察期，整体语气更含蓄。",
+            "重拍后若纹理更清晰，娱乐卡片的方向感也会更强。"
+        ]
+    return [
+        "娱乐设定里可以把事业线写成稳步推进，强调长期习惯带来的秩序感。",
+        "适合给出轻量行动提示，例如今天先完成一个最重要的小步骤。"
+    ]
+
+
+def _palmistry_overall_advice(clarity: float, brightness: float, attention_level: str, archetype: str) -> list[str]:
+    advice = [
+        f"整体卡片可以围绕「{archetype}」展开，把掌纹清晰度、暖色氛围和掌心占比转化为视觉故事。",
+        "所有文案建议使用“娱乐设定”“视觉氛围”“可以理解为”等表达，避免写成确定结论。"
+    ]
+    if clarity >= 66:
+        advice.append("掌纹较清楚时，适合突出目标感、持续感和有条理的推进节奏。")
+    elif clarity < 40:
+        advice.append("掌纹偏柔和时，适合突出慢热、留白、灵感和自我调整的氛围。")
+    else:
+        advice.append("掌纹可见度中等时，适合写成平衡型叙事，既有计划感也保留弹性。")
+
+    if attention_level in {"轻度", "明显"}:
+        advice.append("暖色区域较明显时，娱乐文案可以增加行动感和表达感，但不把它解释为现实情绪或健康结论。")
+    elif brightness < 0.46:
+        advice.append("画面偏暗时，建议把整体解读写得更保守，并提示重新拍摄可提升可读性。")
+    return advice
+
+
+def _palmistry_relationship_advice(attention_level: str, brightness: float) -> list[str]:
+    if attention_level == "明显":
+        return [
+            "关系表达卡片可写成“热度在线，适合把话说清楚一点”，只作为轻松互动文案。",
+            "避免把掌纹写成感情走向预测，建议用温和、开放、边界清楚的表达。"
+        ]
+    if brightness >= 0.72:
+        return [
+            "明亮画面适合生成轻快社交文案，例如更适合自然表达、减少拐弯。",
+            "可以把它当作聊天开场素材，而不是对关系状态的判断。"
+        ]
+    return [
+        "关系表达卡片可写成“慢热但重视安全感”，语气适合柔和一点。",
+        "适合提醒用户把手相内容当作话题，不把它当作真实关系依据。"
+    ]
+
+
+def _palmistry_work_rhythm_advice(clarity: float, edge_density: float, tone: str) -> list[str]:
+    if clarity >= 62 and edge_density >= 0.042:
+        return [
+            "工作节奏卡片可写成“先定方向，再拆步骤”，突出清晰纹理带来的秩序感。",
+            "适合给出今日小目标式文案，例如先推进一件最关键的事。"
+        ]
+    if tone == "光线偏暗" or clarity < 40:
+        return [
+            "工作节奏卡片可写成“先观察、再推进”，适合低调积累的叙事。",
+            "如果要分享，建议把重点放在调整节奏，而不是给出结果承诺。"
+        ]
+    return [
+        "工作节奏卡片可写成“稳中带弹性”，适合把任务拆成几个可完成的小块。",
+        "建议文案强调过程感，不写成事业预测。"
+    ]
+
+
+def _palmistry_daily_rhythm_advice(clarity: float, brightness: float) -> list[str]:
+    advice = [
+        "日常状态卡片可以把掌纹当作视觉日记，记录今天的节奏感和画面氛围。",
+        "建议把解读当作轻松自我观察，不把它当作健康、性格或运势依据。"
+    ]
+    if clarity >= 66:
+        advice.append("掌纹清楚时，可以设置一个更明确的小主题，例如整理、完成、推进。")
+    elif brightness < 0.46:
+        advice.append("画面偏暗时，可以把主题写得更安静，例如休整、慢下来、留白。")
+    else:
+        advice.append("整体中等时，可以把主题写成保持节奏、给自己一点弹性。")
+    return advice
+
+
+def _palmistry_photo_tips(confidence: float, brightness: float, palm_ratio: float) -> list[str]:
+    tips = [
+        "掌心自然展开，手指轻轻分开，让掌心纹理占据画面中心。",
+        "使用白天自然光或柔和侧前方光线，避免滤镜、强暖光和明显反光。"
+    ]
+    if confidence < 55:
+        tips.append("当前娱乐可读性偏低，可让手掌更靠近镜头并保持对焦后重新拍摄。")
+    if brightness < 0.46:
+        tips.append("画面偏暗时，增加柔和正面光会让掌纹增强图更清晰。")
+    if palm_ratio < 0.1:
+        tips.append("手掌占比偏小时，靠近一点拍摄会让生命线、智慧线等卡片更完整。")
+    return list(dict.fromkeys(tips))
 
 
 def _mask_area_ratio(mask: np.ndarray) -> float:
