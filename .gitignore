@@ -1,4 +1,6 @@
 .DS_Store
+/image.png
+/image copy*.png
 node_modules/
 .next/
 out/
