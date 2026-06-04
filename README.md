@@ -1,10 +1,10 @@
 # PalmLens
 
-PalmLens 是一个 Vibe Coding 比赛 MVP：上传一张手掌照片，前端展示原图预览，后端使用 FastAPI、OpenCV、NumPy 和 MediaPipe Hands 优先定位手掌区域，并返回掌心颜色、掌纹清晰度、局部发红颜色分布等视觉特征分析。
+PalmLens 是一个基于手掌图像的视觉特征分析网站：上传一张手掌照片，前端展示原图预览，后端使用 FastAPI、OpenCV、NumPy 和 MediaPipe Hands 优先定位手掌区域，并返回掌心颜色、掌纹清晰度、局部发红颜色分布等视觉特征分析。
 
 重要边界：PalmLens 只输出图像视觉观察和健康科普提示，不提供医学诊断、疾病筛查、治疗建议或用药建议，也不能替代医生判断。
 
-## MVP 功能
+## 功能
 
 - 前端上传 JPG、PNG、WebP 手掌图片，限制 8MB。
 - 页面显示上传原图预览。
@@ -105,7 +105,7 @@ npm run build
 ```bash
 git init
 git add .gitignore README.md backend frontend scripts
-git commit -m "Initial PalmLens MVP"
+git commit -m "Initial PalmLens"
 git branch -M main
 git remote add origin https://github.com/YOUR_USERNAME/PalmLens.git
 git push -u origin main
