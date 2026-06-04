@@ -40,6 +40,24 @@ export type PalmLensReport = {
   };
   observations: ReportItem[];
   tips: ReportItem[];
+  health_suggestions: {
+    risk_level: "low" | "medium" | "high" | "uncertain";
+    risk_label: string;
+    scores: {
+      redness: number;
+      yellow: number;
+      pale: number;
+      lighting_quality: number;
+    };
+    possible_health_directions: Array<{
+      title: string;
+      possible_related_issues: string[];
+      note: string;
+    }>;
+    lifestyle_advice: string[];
+    medical_advice: string;
+    disclaimer: string;
+  };
   palmistry: {
     title: string;
     summary: string;

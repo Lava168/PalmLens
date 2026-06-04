@@ -44,6 +44,10 @@ def analyze_palm_image(image_bytes: bytes) -> dict[str, Any]:
         lines=lines,
         image_shape=image.shape,
     )
+    health_suggestions = _generate_health_suggestions(
+        color_result=_health_color_scores(color=color, redness=redness),
+        texture_result=_health_texture_scores(lines=lines, palm_ratio=_mask_area_ratio(mask)),
+    )
     palmistry = _build_palmistry_reading(color=color, redness=redness, lines=lines, palm_ratio=_mask_area_ratio(mask))
 
     return {
@@ -82,6 +86,7 @@ def analyze_palm_image(image_bytes: bytes) -> dict[str, Any]:
         },
         "observations": observations,
         "tips": tips,
+        "health_suggestions": health_suggestions,
         "palmistry": palmistry,
         "flags": flags,
         "disclaimer": DISCLAIMER,
@@ -571,6 +576,206 @@ def _build_report(
     )
 
     return observations, tips, flags
+
+
+def _health_color_scores(color: dict[str, Any], redness: dict[str, Any]) -> dict[str, float]:
+    brightness = float(color["mean_brightness"])
+    saturation = float(color["mean_saturation"])
+    hue = float(color["mean_hue"])
+    redness_index = float(color["redness_index"])
+    redness_area = float(redness["area_ratio"])
+
+    redness_score = float(np.clip(max(redness_index * 100, redness_area * 420), 0, 100))
+    pale_score = float(np.clip((brightness - 0.58) * 130 + (0.24 - saturation) * 170, 0, 100))
+    yellow_hue_score = 100 if 28 <= hue <= 58 else max(0, 100 - min(abs(hue - 36), abs(hue - 52)) * 7)
+    yellow_score = float(np.clip(yellow_hue_score * 0.48 + saturation * 44 + (1 if color["tone"] == "偏暖黄" else 0) * 32, 0, 100))
+    lighting_quality = float(np.clip((1 - abs(brightness - 0.62) / 0.62) * 72 + min(saturation / 0.22, 1) * 28, 0, 100))
+
+    return {
+        "redness": redness_score,
+        "yellow": yellow_score,
+        "pale": pale_score,
+        "lighting_quality": lighting_quality,
+    }
+
+
+def _health_texture_scores(lines: dict[str, Any], palm_ratio: float) -> dict[str, float]:
+    clarity = float(lines["clarity_score"])
+    palm_framing = float(np.clip(palm_ratio / 0.18 * 100, 0, 100))
+    image_quality = float(np.clip(clarity * 0.62 + palm_framing * 0.38, 0, 100))
+
+    return {
+        "clarity": clarity,
+        "palm_framing": palm_framing,
+        "image_quality": image_quality,
+    }
+
+
+def _generate_health_suggestions(color_result: dict[str, float], texture_result: dict[str, float]) -> dict[str, Any]:
+    redness = color_result.get("redness", 0)
+    yellow = color_result.get("yellow", 0)
+    pale = color_result.get("pale", 0)
+    lighting = min(color_result.get("lighting_quality", 100), texture_result.get("image_quality", 100))
+
+    possible_health_directions: list[dict[str, Any]] = []
+    lifestyle_advice: list[str] = []
+
+    if lighting < 40:
+        return {
+            "risk_level": "uncertain",
+            "risk_label": "图片质量不足",
+            "scores": {
+                "redness": round(float(redness), 1),
+                "yellow": round(float(yellow), 1),
+                "pale": round(float(pale), 1),
+                "lighting_quality": round(float(lighting), 1),
+            },
+            "possible_health_directions": [
+                {
+                    "title": "图片质量不足",
+                    "possible_related_issues": [
+                        "光照不足",
+                        "过曝",
+                        "手掌区域不完整",
+                        "图片模糊",
+                    ],
+                    "note": "当前图片质量可能影响视觉分析结果，建议重新拍摄后再参考报告。",
+                }
+            ],
+            "lifestyle_advice": [
+                "请在白天自然光下重新拍摄。",
+                "保持手掌完全展开，掌心正对镜头。",
+                "避免使用美颜、滤镜或强暖光。",
+                "拍摄前避免刚运动、洗热水澡或饮酒。",
+            ],
+            "medical_advice": "当前图片质量不足，暂不建议根据本次结果做健康判断。",
+            "disclaimer": DISCLAIMER,
+        }
+
+    if redness > 65:
+        possible_health_directions.append(
+            {
+                "title": "掌心偏红",
+                "possible_related_issues": [
+                    "运动后充血",
+                    "皮肤刺激",
+                    "饮酒或热水刺激",
+                    "掌红斑相关表现",
+                    "肝脏代谢相关问题需排除",
+                    "甲状腺功能相关问题需排除",
+                    "风湿免疫相关问题需排除",
+                ],
+                "note": "掌心偏红可能由环境、运动、饮酒、皮肤状态等多种因素造成；如果长期持续，建议咨询医生。",
+            }
+        )
+
+        lifestyle_advice.extend(
+            [
+                "避免刚运动、洗热水澡、饮酒后立即拍照或判断掌色。",
+                "在自然光下重新拍摄，观察掌心发红是否仍然明显。",
+                "观察是否双手对称发红，是否伴随掌心发热或皮肤不适。",
+                "近期减少饮酒，保持规律睡眠。",
+                "如果伴随乏力、眼白发黄、腹胀、关节疼痛或心悸，建议咨询医生。",
+            ]
+        )
+
+    if pale > 65:
+        possible_health_directions.append(
+            {
+                "title": "掌色偏淡",
+                "possible_related_issues": [
+                    "光照过强",
+                    "低温导致局部血流减少",
+                    "疲劳状态",
+                    "贫血相关表现需排除",
+                    "循环状态变化",
+                ],
+                "note": "掌色偏淡不能直接说明贫血；如果长期明显偏白并伴随乏力、头晕等情况，建议做进一步检查。",
+            }
+        )
+
+        lifestyle_advice.extend(
+            [
+                "换到自然光环境重新拍摄，避免过曝。",
+                "注意近期是否有乏力、头晕、心慌、气短等情况。",
+                "饮食上注意摄入瘦肉、蛋类、豆类、深绿色蔬菜等含铁食物。",
+                "不要自行大量补铁，必要时先咨询医生或进行血常规检查。",
+            ]
+        )
+
+    if yellow > 65:
+        possible_health_directions.append(
+            {
+                "title": "掌色偏黄",
+                "possible_related_issues": [
+                    "暖光或相机白平衡影响",
+                    "胡萝卜素摄入较多",
+                    "皮肤色素变化",
+                    "肝胆相关问题需排除",
+                ],
+                "note": "掌色偏黄可能只是光线或饮食影响；如果同时出现眼白发黄、尿色加深等情况，需要提高关注。",
+            }
+        )
+
+        lifestyle_advice.extend(
+            [
+                "在白天自然光下重新拍摄，避免暖黄色灯光。",
+                "回想近期是否大量食用胡萝卜、南瓜、橘子、红薯等食物。",
+                "观察眼白是否也发黄，尿色是否明显加深。",
+                "减少熬夜和饮酒，保持规律作息。",
+                "如果眼白发黄、尿色加深、皮肤瘙痒或右上腹不适，建议尽快就医。",
+            ]
+        )
+
+    if not possible_health_directions:
+        possible_health_directions.append(
+            {
+                "title": "未发现明显异常视觉特征",
+                "possible_related_issues": [
+                    "当前图像下掌色和掌纹表现相对平稳",
+                ],
+                "note": "未发现明显异常不代表没有健康问题，如有身体不适仍应咨询医生。",
+            }
+        )
+
+        lifestyle_advice.extend(
+            [
+                "保持规律作息和均衡饮食。",
+                "避免长期熬夜、过量饮酒和久坐。",
+                "定期体检，关注血常规、肝功能、血糖等基础指标。",
+                "如果出现持续乏力、心悸、皮肤或眼白发黄、关节疼痛等症状，应及时就医。",
+            ]
+        )
+
+    max_abnormal = max(redness, yellow, pale)
+
+    if max_abnormal >= 80:
+        risk_level = "high"
+        risk_label = "较高视觉关注"
+        medical_advice = "当前图像存在较明显视觉特征。建议在自然光下复拍确认；如果持续存在或伴随身体不适，建议咨询医生。"
+    elif max_abnormal >= 60:
+        risk_level = "medium"
+        risk_label = "中等视觉关注"
+        medical_advice = "当前图像存在一定视觉特征。建议持续观察，并结合自身症状判断是否需要咨询医生。"
+    else:
+        risk_level = "low"
+        risk_label = "低视觉关注"
+        medical_advice = "当前图像未显示明显需要高度关注的视觉特征。若有身体不适，仍建议咨询医生。"
+
+    return {
+        "risk_level": risk_level,
+        "risk_label": risk_label,
+        "scores": {
+            "redness": round(float(redness), 1),
+            "yellow": round(float(yellow), 1),
+            "pale": round(float(pale), 1),
+            "lighting_quality": round(float(lighting), 1),
+        },
+        "possible_health_directions": possible_health_directions,
+        "lifestyle_advice": list(dict.fromkeys(lifestyle_advice)),
+        "medical_advice": medical_advice,
+        "disclaimer": DISCLAIMER,
+    }
 
 
 def _build_palmistry_reading(

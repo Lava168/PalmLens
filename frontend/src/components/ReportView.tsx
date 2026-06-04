@@ -52,6 +52,12 @@ export function ReportView({ report }: ReportViewProps) {
   const palmAreaPercent = report.metrics.palm_area_ratio * 100;
   const brightnessPercent = report.metrics.color.mean_brightness * 100;
   const rednessIndexPercent = report.metrics.color.redness_index * 100;
+  const healthTone = {
+    low: "sage",
+    medium: "pollen",
+    high: "coral",
+    uncertain: "pollen"
+  }[report.health_suggestions.risk_level] as "sage" | "pollen" | "coral";
   const visualizations = [
     {
       title: "综合叠加图",
@@ -187,45 +193,152 @@ export function ReportView({ report }: ReportViewProps) {
 
           {mode === "health" ? (
             <>
-          <div>
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
-              <Sparkles className="size-4 text-coral" aria-hidden="true" />
-              Observations
-            </div>
-            <div className="divide-y divide-sage/20 rounded-[8px] border border-sage/25 bg-white/55">
-              {report.observations.map((item) => (
-                <div key={item.title} className="p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <h3 className="text-sm font-semibold text-ink">{item.title}</h3>
-                    {item.value ? <span className="text-sm font-semibold text-clay">{item.value}</span> : null}
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-mineral">{item.detail}</p>
+              <div className="rounded-[8px] border border-sage/25 bg-white/58 p-4">
+                <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <HeartPulse className="size-4 text-coral" aria-hidden="true" />
+                  视觉关注等级
                 </div>
-              ))}
-            </div>
-          </div>
+                <MetricBar
+                  label={report.health_suggestions.risk_label}
+                  value={report.health_suggestions.risk_level.toUpperCase()}
+                  percent={
+                    report.health_suggestions.risk_level === "high"
+                      ? 92
+                      : report.health_suggestions.risk_level === "medium"
+                        ? 64
+                        : report.health_suggestions.risk_level === "uncertain"
+                          ? 42
+                          : 28
+                  }
+                  tone={healthTone}
+                />
+                <p className="mt-3 text-sm leading-6 text-mineral">{report.health_suggestions.medical_advice}</p>
+              </div>
 
-          <div>
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
-              <HeartPulse className="size-4 text-coral" aria-hidden="true" />
-              Health notes
-            </div>
-            <div className="space-y-3">
-              {report.tips.map((item) => (
-                <div key={item.title} className="rounded-[8px] border border-white/70 bg-white/58 p-4">
-                  <div className="flex items-center gap-2">
-                    {item.title === "边界声明" ? (
-                      <AlertTriangle className="size-4 text-coral" aria-hidden="true" />
-                    ) : (
-                      <BadgeInfo className="size-4 text-sage" aria-hidden="true" />
-                    )}
-                    <h3 className="text-sm font-semibold text-ink">{item.title}</h3>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-mineral">{item.detail}</p>
+              <div className="rounded-[8px] border border-sage/25 bg-white/58 p-4">
+                <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <ScanLine className="size-4 text-sage" aria-hidden="true" />
+                  色彩关注分数
                 </div>
-              ))}
-            </div>
-          </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <MetricBar
+                    label="偏红"
+                    value={`${report.health_suggestions.scores.redness.toFixed(0)}`}
+                    percent={report.health_suggestions.scores.redness}
+                    tone={report.health_suggestions.scores.redness > 65 ? "coral" : "pollen"}
+                  />
+                  <MetricBar
+                    label="偏黄"
+                    value={`${report.health_suggestions.scores.yellow.toFixed(0)}`}
+                    percent={report.health_suggestions.scores.yellow}
+                    tone="pollen"
+                  />
+                  <MetricBar
+                    label="偏淡"
+                    value={`${report.health_suggestions.scores.pale.toFixed(0)}`}
+                    percent={report.health_suggestions.scores.pale}
+                    tone="sage"
+                  />
+                  <MetricBar
+                    label="图片质量"
+                    value={`${report.health_suggestions.scores.lighting_quality.toFixed(0)}`}
+                    percent={report.health_suggestions.scores.lighting_quality}
+                    tone="sage"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <Sparkles className="size-4 text-coral" aria-hidden="true" />
+                  Possible directions
+                </div>
+                <div className="space-y-3">
+                  {report.health_suggestions.possible_health_directions.map((item) => (
+                    <div key={item.title} className="rounded-[8px] border border-sage/25 bg-white/58 p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <h3 className="text-sm font-semibold text-ink">{item.title}</h3>
+                        <span className="rounded-[6px] bg-celadon/70 px-2.5 py-1 text-xs font-semibold text-mineral">
+                          科普方向
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-mineral">{item.note}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {item.possible_related_issues.map((issue) => (
+                          <span
+                            key={issue}
+                            className="rounded-[6px] border border-sage/25 bg-white/65 px-2.5 py-1 text-xs font-semibold text-mineral"
+                          >
+                            {issue}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <BadgeInfo className="size-4 text-sage" aria-hidden="true" />
+                  Lifestyle notes
+                </div>
+                <div className="space-y-3">
+                  {report.health_suggestions.lifestyle_advice.map((item) => (
+                    <div key={item} className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                      <p className="text-sm leading-6 text-mineral">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <Sparkles className="size-4 text-coral" aria-hidden="true" />
+                  Observations
+                </div>
+                <div className="divide-y divide-sage/20 rounded-[8px] border border-sage/25 bg-white/55">
+                  {report.observations.map((item) => (
+                    <div key={item.title} className="p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <h3 className="text-sm font-semibold text-ink">{item.title}</h3>
+                        {item.value ? <span className="text-sm font-semibold text-clay">{item.value}</span> : null}
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-mineral">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <HeartPulse className="size-4 text-coral" aria-hidden="true" />
+                  Health notes
+                </div>
+                <div className="space-y-3">
+                  {report.tips.map((item) => (
+                    <div key={item.title} className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                      <div className="flex items-center gap-2">
+                        {item.title === "边界声明" ? (
+                          <AlertTriangle className="size-4 text-coral" aria-hidden="true" />
+                        ) : (
+                          <BadgeInfo className="size-4 text-sage" aria-hidden="true" />
+                        )}
+                        <h3 className="text-sm font-semibold text-ink">{item.title}</h3>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-mineral">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[8px] border border-coral/25 bg-coral/10 p-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="size-4 text-coral" aria-hidden="true" />
+                  <h3 className="text-sm font-semibold text-ink">边界声明</h3>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-mineral">{report.health_suggestions.disclaimer}</p>
+              </div>
             </>
           ) : (
             <div className="space-y-5">
