@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: palmlens-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    healthCheckPath: /health
+    envVars:
+      - key: ALLOWED_ORIGINS
+        sync: false

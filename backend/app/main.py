@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,6 +7,16 @@ from .analyzer import AnalyzerError, analyze_palm_image
 
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
+DEFAULT_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+
+def _allowed_origins() -> list[str]:
+    configured = os.getenv("ALLOWED_ORIGINS", "")
+    origins = [origin.strip().rstrip("/") for origin in configured.split(",") if origin.strip()]
+    return [*DEFAULT_ALLOWED_ORIGINS, *origins]
 
 app = FastAPI(
     title="PalmLens API",
@@ -14,10 +26,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -52,4 +61,3 @@ async def analyze(file: UploadFile = File(...)) -> dict:
         return analyze_palm_image(data)
     except AnalyzerError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-

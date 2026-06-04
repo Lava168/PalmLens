@@ -89,6 +89,60 @@ npm run lint
 npm run build
 ```
 
+## 正式部署
+
+建议把前端和后端分开部署：
+
+- 前端：Vercel，Root Directory 设置为 `frontend`。
+- 后端：Render，使用仓库根目录下的 `render.yaml` 和 `backend/Dockerfile` 部署 FastAPI API。
+
+### 部署后端到 Render
+
+1. 在 Render 创建 Blueprint 或 Web Service，并连接本仓库。
+2. 如果使用 Blueprint，Render 会读取仓库根目录的 `render.yaml`。
+3. 如果手动创建 Web Service：
+   - Root Directory：`backend`
+   - Runtime：Docker
+   - Health Check Path：`/health`
+4. 部署完成后，记录后端 URL，例如：
+
+```text
+https://palmlens-api.onrender.com
+```
+
+### 部署前端到 Vercel
+
+1. 在 Vercel 导入本仓库。
+2. Root Directory 设置为 `frontend`。
+3. Framework Preset 选择 Next.js。
+4. 添加环境变量：
+
+```bash
+NEXT_PUBLIC_API_URL=https://你的-render-后端地址
+```
+
+5. 部署完成后，记录前端 URL，例如：
+
+```text
+https://palmlens.vercel.app
+```
+
+### 配置线上 CORS
+
+把 Vercel 前端 URL 添加到 Render 后端环境变量：
+
+```bash
+ALLOWED_ORIGINS=https://你的-vercel-前端地址
+```
+
+如果有多个前端域名，用英文逗号分隔：
+
+```bash
+ALLOWED_ORIGINS=https://palmlens.vercel.app,https://www.example.com
+```
+
+配置后重新部署后端。`ALLOWED_ORIGINS` 不需要包含本地地址，后端默认已经允许 `http://localhost:3000` 和 `http://127.0.0.1:3000`。
+
 ## 报告内容
 
 报告只包含以下非诊断信息：
