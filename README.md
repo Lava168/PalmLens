@@ -1,6 +1,6 @@
 # PalmLens
 
-**[English](#english)** · **[中文](#中文)** · **[Screenshots / 界面截图](#screenshots)**
+**[English](#english)** · **[中文](#中文)** · **[Screenshots / 界面截图](#screenshots)** · **[Docker Local Deployment Guide (EN)](LOCAL_DEPLOY_GUIDE_en.md)** · **[Docker 本地部署指南 (中文)](LOCAL_DEPLOY_GUIDE_zh.md)**
 
 > Upload a palm photo → visual report (health tips + entertainment palmistry). **Non-diagnostic.**  
 > 上传手掌照片 → 视觉报告（健康科普 + 趣味手相）。**非诊断。**
@@ -172,6 +172,9 @@ backend/.venv/bin/python -m unittest discover -s backend/tests
 cd frontend && npm run lint && npm run build
 ```
 
+**Or using Docker:**
+👉 [Docker Local Deployment Guide (EN)](LOCAL_DEPLOY_GUIDE_en.md)
+
 ### Deployment
 
 | Part | Platform | Notes |
@@ -247,6 +250,9 @@ cd frontend && pnpm install && pnpm dev
 backend/.venv/bin/python -m unittest discover -s backend/tests
 cd frontend && npm run lint && npm run build
 ```
+
+**或者使用 Docker:**  
+👉 [Docker 本地部署指南 (中文)](LOCAL_DEPLOY_GUIDE_zh.md)
 
 ### 部署
 
