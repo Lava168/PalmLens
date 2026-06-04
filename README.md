@@ -2,6 +2,25 @@
 
 **[English](#english)** · **[中文](#中文)**
 
+<p align="center">
+  <img src="docs/images/hero-banner.png" alt="PalmLens — stylized palm illustration" width="920" />
+</p>
+
+<p align="center">
+  <img src="docs/images/analysis-gallery.png" alt="PalmLens analysis outputs: sample palm, overlay, palm lines, red heatmap" width="980" />
+</p>
+
+<p align="center">
+  <sub>样例图 → 叠加 → 掌纹增强 → 红色热力图 · Sample → overlay → lines → heatmap (non-diagnostic / 非诊断)</sub>
+</p>
+
+| | |
+|:---:|:---:|
+| <img src="docs/images/overlay.png" alt="Palm region overlay" width="420" /> | <img src="docs/images/line-enhanced.png" alt="Enhanced palm lines" width="420" /> |
+| **叠加图 Overlay** · 掌心区域与标记 | **掌纹增强 Palm lines** · 纹理对比强化 |
+| <img src="docs/images/red-heatmap.png" alt="Red color heatmap" width="420" /> | |
+| **红色热力图 Red heatmap** · 高饱和红色分布 | |
+
 ---
 
 <a id="english"></a>
@@ -136,6 +155,14 @@ Live demo (example): https://palmlens.vercel.app
 - Attention level: low / medium / high / uncertain from color and quality scores.
 - Recheck plan and color explanations (red / yellow / pale).
 - Entertainment palmistry: life, head, heart, and career line cards from visual features.
+
+### Screenshots on GitHub
+
+Preview images live in `docs/images/`. Regenerate after analyzer changes:
+
+```bash
+backend/.venv/bin/python scripts/export_github_images.py
+```
 
 ### Push to GitHub
 
@@ -288,6 +315,14 @@ ALLOWED_ORIGINS=https://你的-vercel-前端地址
 - 视觉关注等级：根据偏红、偏黄、偏淡和图片质量生成低、中、高或不确定等级。
 - 图片质量与复查计划、颜色解释、生活建议。
 - 趣味手相：生命线、智慧线、感情线、事业线等娱乐卡片。
+
+### GitHub 配图
+
+预览图位于 `docs/images/`。分析逻辑更新后可重新生成：
+
+```bash
+backend/.venv/bin/python scripts/export_github_images.py
+```
 
 ### 上传到 GitHub
 
