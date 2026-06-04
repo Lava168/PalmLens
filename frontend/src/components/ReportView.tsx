@@ -194,6 +194,14 @@ export function ReportView({ report }: ReportViewProps) {
           {mode === "health" ? (
             <>
               <div className="rounded-[8px] border border-sage/25 bg-white/58 p-4">
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <Sparkles className="size-4 text-coral" aria-hidden="true" />
+                  健康分析总览
+                </div>
+                <p className="text-sm leading-6 text-mineral">{report.health_suggestions.summary}</p>
+              </div>
+
+              <div className="rounded-[8px] border border-sage/25 bg-white/58 p-4">
                 <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
                   <HeartPulse className="size-4 text-coral" aria-hidden="true" />
                   视觉关注等级
@@ -248,6 +256,57 @@ export function ReportView({ report }: ReportViewProps) {
                 </div>
               </div>
 
+              <div className="rounded-[8px] border border-sage/25 bg-white/58 p-4">
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <Eye className="size-4 text-sage" aria-hidden="true" />
+                  图片质量解读
+                </div>
+                <div className="space-y-2">
+                  {report.health_suggestions.quality_notes.map((item) => (
+                    <p key={item} className="text-sm leading-6 text-mineral">{item}</p>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                {report.health_suggestions.color_explanation.map((item) => (
+                  <div key={item.title} className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <h3 className="text-sm font-semibold text-ink">{item.title}</h3>
+                      <span className="rounded-[6px] bg-celadon/70 px-2.5 py-1 text-xs font-semibold text-mineral">
+                        {item.level}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-mineral">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <h3 className="text-sm font-semibold text-ink">红色区域解释</h3>
+                    <span className="rounded-[6px] bg-coral/10 px-2.5 py-1 text-xs font-semibold text-clay">
+                      {report.health_suggestions.redness_explanation.level}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-mineral">
+                    {report.health_suggestions.redness_explanation.detail}
+                  </p>
+                </div>
+                <div className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <h3 className="text-sm font-semibold text-ink">掌纹纹理解读</h3>
+                    <span className="rounded-[6px] bg-celadon/70 px-2.5 py-1 text-xs font-semibold text-mineral">
+                      {report.health_suggestions.texture_explanation.level}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-mineral">
+                    {report.health_suggestions.texture_explanation.detail}
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
                   <Sparkles className="size-4 text-coral" aria-hidden="true" />
@@ -286,6 +345,34 @@ export function ReportView({ report }: ReportViewProps) {
                 <div className="space-y-3">
                   {report.health_suggestions.lifestyle_advice.map((item) => (
                     <div key={item} className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                      <p className="text-sm leading-6 text-mineral">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <ScanLine className="size-4 text-sage" aria-hidden="true" />
+                  Recheck plan
+                </div>
+                <div className="space-y-3">
+                  {report.health_suggestions.recheck_plan.map((item) => (
+                    <div key={item} className="rounded-[8px] border border-pollen/45 bg-white/58 p-4">
+                      <p className="text-sm leading-6 text-mineral">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <AlertTriangle className="size-4 text-coral" aria-hidden="true" />
+                  Consult a doctor if
+                </div>
+                <div className="space-y-3">
+                  {report.health_suggestions.consult_doctor_if.map((item) => (
+                    <div key={item} className="rounded-[8px] border border-coral/25 bg-white/58 p-4">
                       <p className="text-sm leading-6 text-mineral">{item}</p>
                     </div>
                   ))}

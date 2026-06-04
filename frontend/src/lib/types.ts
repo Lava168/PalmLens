@@ -49,12 +49,29 @@ export type PalmLensReport = {
       pale: number;
       lighting_quality: number;
     };
+    summary: string;
+    quality_notes: string[];
+    color_explanation: Array<{
+      title: string;
+      level: string;
+      detail: string;
+    }>;
+    redness_explanation: {
+      level: string;
+      detail: string;
+    };
+    texture_explanation: {
+      level: string;
+      detail: string;
+    };
     possible_health_directions: Array<{
       title: string;
       possible_related_issues: string[];
       note: string;
     }>;
     lifestyle_advice: string[];
+    recheck_plan: string[];
+    consult_doctor_if: string[];
     medical_advice: string;
     disclaimer: string;
   };

@@ -624,12 +624,17 @@ def _generate_health_suggestions(color_result: dict[str, float], texture_result:
         return {
             "risk_level": "uncertain",
             "risk_label": "图片质量不足",
+            "summary": "当前照片的光照、清晰度或手掌取景可能影响视觉分析，建议先复拍再参考报告。",
             "scores": {
                 "redness": round(float(redness), 1),
                 "yellow": round(float(yellow), 1),
                 "pale": round(float(pale), 1),
                 "lighting_quality": round(float(lighting), 1),
             },
+            "quality_notes": _quality_notes(lighting, texture_result),
+            "color_explanation": _color_explanation(redness, yellow, pale),
+            "redness_explanation": _redness_explanation(redness),
+            "texture_explanation": _texture_explanation(texture_result),
             "possible_health_directions": [
                 {
                     "title": "图片质量不足",
@@ -647,6 +652,14 @@ def _generate_health_suggestions(color_result: dict[str, float], texture_result:
                 "保持手掌完全展开，掌心正对镜头。",
                 "避免使用美颜、滤镜或强暖光。",
                 "拍摄前避免刚运动、洗热水澡或饮酒。",
+            ],
+            "recheck_plan": [
+                "间隔 10 到 15 分钟后，在自然光下重新拍摄一张。",
+                "如果复拍后结果变化很大，优先参考画质更稳定的一张。",
+            ],
+            "consult_doctor_if": [
+                "现实中有持续不适或症状，而不是仅仅照片看起来异常。",
+                "同一区域持续发红、发热、疼痛、瘙痒或肿胀。",
             ],
             "medical_advice": "当前图片质量不足，暂不建议根据本次结果做健康判断。",
             "disclaimer": DISCLAIMER,
@@ -765,17 +778,152 @@ def _generate_health_suggestions(color_result: dict[str, float], texture_result:
     return {
         "risk_level": risk_level,
         "risk_label": risk_label,
+        "summary": _health_summary(risk_label, redness, yellow, pale, lighting),
         "scores": {
             "redness": round(float(redness), 1),
             "yellow": round(float(yellow), 1),
             "pale": round(float(pale), 1),
             "lighting_quality": round(float(lighting), 1),
         },
+        "quality_notes": _quality_notes(lighting, texture_result),
+        "color_explanation": _color_explanation(redness, yellow, pale),
+        "redness_explanation": _redness_explanation(redness),
+        "texture_explanation": _texture_explanation(texture_result),
         "possible_health_directions": possible_health_directions,
         "lifestyle_advice": list(dict.fromkeys(lifestyle_advice)),
+        "recheck_plan": _recheck_plan(redness, yellow, pale, lighting),
+        "consult_doctor_if": _consult_doctor_if(redness, yellow, pale),
         "medical_advice": medical_advice,
         "disclaimer": DISCLAIMER,
     }
+
+
+def _health_summary(risk_label: str, redness: float, yellow: float, pale: float, lighting: float) -> str:
+    dominant = max(
+        [("偏红", redness), ("偏黄", yellow), ("偏淡", pale)],
+        key=lambda item: item[1],
+    )
+    if dominant[1] < 45:
+        feature = "未见特别突出的掌色倾向"
+    else:
+        feature = f"{dominant[0]}分数相对更高"
+
+    quality = "图片质量较稳定" if lighting >= 65 else "图片质量中等，建议结合复拍结果观察"
+    return f"本次报告为{risk_label}：{feature}，{quality}。这些结果只描述照片中的视觉特征，不代表医学结论。"
+
+
+def _quality_notes(lighting: float, texture_result: dict[str, float]) -> list[str]:
+    notes: list[str] = []
+    clarity = texture_result.get("clarity", 0)
+    palm_framing = texture_result.get("palm_framing", 0)
+
+    if lighting < 45:
+        notes.append("光照或整体画质偏弱，颜色类分数容易受环境影响。")
+    elif lighting < 70:
+        notes.append("图片质量可用于初步观察，但仍建议用自然光复拍做对照。")
+    else:
+        notes.append("图片质量较稳定，适合做本次视觉特征参考。")
+
+    if clarity < 40:
+        notes.append("掌纹清晰度偏弱，纹理相关判断可能受到模糊、过曝或皮肤反光影响。")
+    elif clarity < 66:
+        notes.append("掌纹清晰度中等，能看到部分纹理，但细节仍可能被压缩或锐化影响。")
+    else:
+        notes.append("掌纹清晰度较好，纹理观察的参考价值相对更高。")
+
+    if palm_framing < 55:
+        notes.append("手掌在画面中的占比偏小，建议让掌心更靠近镜头。")
+    else:
+        notes.append("手掌取景较完整，ROI 提取结果可作为本次分析参考。")
+
+    return notes
+
+
+def _color_explanation(redness: float, yellow: float, pale: float) -> list[dict[str, str]]:
+    return [
+        {
+            "title": "偏红分数",
+            "level": _score_level(redness),
+            "detail": "由红色优势、红色区域占比和饱和度估算，容易受到运动、热水、饮酒、按压和环境光影响。",
+        },
+        {
+            "title": "偏黄分数",
+            "level": _score_level(yellow),
+            "detail": "由掌心色相、饱和度和暖色倾向估算，暖光、白平衡和近期饮食都可能让分数升高。",
+        },
+        {
+            "title": "偏淡分数",
+            "level": _score_level(pale),
+            "detail": "由亮度偏高、饱和度偏低等特征估算，过曝、低温和拍摄角度都可能影响结果。",
+        },
+    ]
+
+
+def _redness_explanation(redness: float) -> dict[str, str]:
+    if redness >= 80:
+        level = "明显"
+        detail = "照片中红色视觉特征较突出，建议在自然光下复拍，并观察是否双手对称、是否持续存在。"
+    elif redness >= 60:
+        level = "中等"
+        detail = "照片中存在一定红色视觉特征，可结合运动、饮酒、洗热水澡、皮肤刺激等近期因素理解。"
+    else:
+        level = "较低"
+        detail = "照片中红色视觉特征不突出，但单张照片不能代表真实皮肤状态。"
+    return {"level": level, "detail": detail}
+
+
+def _texture_explanation(texture_result: dict[str, float]) -> dict[str, str]:
+    clarity = texture_result.get("clarity", 0)
+    if clarity >= 66:
+        return {
+            "level": "清晰",
+            "detail": "掌纹边缘和局部对比度较好，说明照片锐度和纹理可见度较稳定。",
+        }
+    if clarity >= 40:
+        return {
+            "level": "中等",
+            "detail": "能看到部分掌纹纹理，但细节可能受到压缩、反光或轻微模糊影响。",
+        }
+    return {
+        "level": "较弱",
+        "detail": "掌纹纹理偏弱，建议补充柔和正面光、保持掌心平展后复拍。",
+    }
+
+
+def _recheck_plan(redness: float, yellow: float, pale: float, lighting: float) -> list[str]:
+    plan = [
+        "用白天自然光复拍一张，避免美颜、滤镜、强暖光和过曝。",
+        "拍摄前让手掌放松 5 到 10 分钟，避免刚运动、洗热水澡、饮酒或用力按压。",
+    ]
+    if max(redness, yellow, pale) >= 60:
+        plan.append("间隔一天在相似光线下再次拍摄，比较掌色倾向是否仍然存在。")
+    if lighting < 65:
+        plan.append("如果图片质量分数不高，优先改善光照和对焦后再参考健康提示。")
+    return plan
+
+
+def _consult_doctor_if(redness: float, yellow: float, pale: float) -> list[str]:
+    items = [
+        "视觉特征持续多天存在，并且不是由光线、运动、饮酒、热水或滤镜造成。",
+        "伴随明显疼痛、发热、瘙痒、肿胀、乏力、心悸或头晕。",
+    ]
+    if redness >= 60:
+        items.append("掌心持续明显发红，或双手对称发红并伴随身体不适。")
+    if yellow >= 60:
+        items.append("掌色偏黄同时伴随眼白发黄、尿色加深、皮肤瘙痒或右上腹不适。")
+    if pale >= 60:
+        items.append("掌色长期明显偏淡，同时伴随乏力、头晕、心慌或气短。")
+    return list(dict.fromkeys(items))
+
+
+def _score_level(score: float) -> str:
+    if score >= 80:
+        return "明显"
+    if score >= 60:
+        return "中等"
+    if score >= 40:
+        return "轻度"
+    return "较低"
 
 
 def _build_palmistry_reading(
