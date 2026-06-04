@@ -1,13 +1,47 @@
 # PalmLens
 
-**[English](#english)** · **[中文](#中文)**
+**[English](#english)** · **[中文](#中文)** · **[Screenshots / 界面截图](#screenshots)**
 
-> **PalmLens** — Upload a palm photo, get a visual analysis report with health education and entertainment palm reading.  
-> **PalmLens** — 上传手掌照片，获得视觉分析报告：健康科普提示 + 趣味手相解读。
+> Upload a palm photo → visual report (health tips + entertainment palmistry). **Non-diagnostic.**  
+> 上传手掌照片 → 视觉报告（健康科普 + 趣味手相）。**非诊断。**
 
 <p align="center">
   <a href="https://palmlens.vercel.app"><strong>Live demo · 在线演示</strong></a>
 </p>
+
+<!-- GitHub 仓库首页展示图：以下图片会显示在 GitHub 项目页顶部 -->
+<p align="center">
+  <img src="docs/images/github-showcase.png" alt="PalmLens app: upload, preview, scores, health report" width="100%" />
+</p>
+
+<p align="center"><sub>上传 → 预览 → 分析分数 → 健康报告 · Upload → Preview → Scores → Health report</sub></p>
+
+<a id="screenshots"></a>
+
+## Screenshots · 产品界面（GitHub 展示）
+
+| | | | |
+|:---:|:---:|:---:|:---:|
+| ![Home upload 首页上传](docs/images/screenshots/ui-home-upload.png) | ![Preview 原图预览](docs/images/screenshots/ui-upload-preview.png) | ![Waiting 等待分析](docs/images/screenshots/ui-report-waiting.png) | ![Overlay 综合叠加](docs/images/screenshots/ui-overlay-report.png) |
+| 首页上传 | 原图预览 | 等待分析 | 综合叠加图 |
+| ![Line enhanced 掌纹增强](docs/images/screenshots/ui-line-enhanced.png) | ![Red heatmap 红色热力图](docs/images/screenshots/ui-red-heatmap.png) | ![Metrics 分析分数](docs/images/screenshots/ui-metrics.png) | ![Health report 健康详情](docs/images/screenshots/ui-health-details.png) |
+| 掌纹增强 | 红色热力图 | 分析分数 | 健康分析详情 |
+
+<details>
+<summary><strong>Full-size views · 点击查看大图</strong></summary>
+
+| Step | 截图 Screenshot |
+|:--:|:--|
+| 1 | ![ui-home-upload](docs/images/screenshots/ui-home-upload.png) |
+| 2 | ![ui-upload-preview](docs/images/screenshots/ui-upload-preview.png) |
+| 3 | ![ui-report-waiting](docs/images/screenshots/ui-report-waiting.png) |
+| 4 | ![ui-overlay-report](docs/images/screenshots/ui-overlay-report.png) |
+| 5 | ![ui-line-enhanced](docs/images/screenshots/ui-line-enhanced.png) |
+| 6 | ![ui-red-heatmap](docs/images/screenshots/ui-red-heatmap.png) |
+| 7 | ![ui-metrics](docs/images/screenshots/ui-metrics.png) |
+| 8 | ![ui-health-details](docs/images/screenshots/ui-health-details.png) |
+
+</details>
 
 ---
 
@@ -65,109 +99,27 @@ PalmLens/
 └── render.yaml        Render backend blueprint
 ```
 
----
+### Screenshot guide · 界面说明
 
-## Analysis previews · 分析示意图
+| # | Screen · 界面 | Description · 说明 |
+|---|---------------|-------------------|
+| 1 | 首页上传 | Drag-and-drop; tags: visual observation, non-diagnostic · 拖拽上传，非诊断 |
+| 2 | 原图预览 | Local preview before API call · 分析前本地预览 |
+| 3 | 等待分析 | Report placeholder + disclaimer · 报告区占位与声明 |
+| 4 | 综合叠加 | MediaPipe ROI, lines, redness · 掌心区域与发红标记 |
+| 5 | 掌纹增强 | Contrast-enhanced creases · 掌纹边缘强化 |
+| 6 | 红色热力图 | High-saturation red pixels only · 红色像素分布 |
+| 7 | 分析分数 | Six metric bars · 六项量化分数 |
+| 8 | 健康详情 | Education cards + lifestyle notes · 科普解读与生活建议 |
 
-<p align="center">
-  <img src="docs/images/hero-banner.png" alt="PalmLens stylized palm artwork" width="920" />
-</p>
-
-<p align="center">
-  <img src="docs/images/analysis-gallery.png" alt="Sample → overlay → palm lines → red heatmap" width="980" />
-</p>
-
-<p align="center">
-  <sub>样例图 → 叠加 → 掌纹增强 → 红色热力图 · Sample → overlay → lines → heatmap (non-diagnostic / 非诊断)</sub>
-</p>
-
-| | |
-|:---:|:---:|
-| <img src="docs/images/overlay.png" width="420" /> | <img src="docs/images/line-enhanced.png" width="420" /> |
-| **叠加图 Overlay** · ROI & markings | **掌纹增强 Palm lines** · contrast-enhanced texture |
-| <img src="docs/images/red-heatmap.png" width="420" /> | |
-| **红色热力图 Red heatmap** · high-saturation red pixels | |
-
----
-
-## UI screenshots · 界面截图
-
-Real product screens (upload → report).  
-以下为实际上传与报告界面截图。
-
-### 1. Home — upload area · 首页上传区
+<details>
+<summary><strong>Algorithm demo (synthetic sample) · 算法示意图（内置样例图）</strong></summary>
 
 <p align="center">
-  <img src="docs/images/screenshots/ui-home-upload.png" alt="PalmLens home upload screen" width="520" />
+  <img src="docs/images/analysis-gallery.png" alt="Analyzer output gallery" width="900" />
 </p>
 
-**EN:** Landing state with drag-and-drop upload, format hints, and tags **Visual observation** / **Non-diagnostic**.  
-**中文：** 初始页支持点击或拖拽上传，标注支持格式与大小；顶部标签强调「视觉观察」「非诊断」。
-
-### 2. Photo selected — local preview · 已选图本地预览
-
-<p align="center">
-  <img src="docs/images/screenshots/ui-upload-preview.png" alt="Palm upload with preview" width="520" />
-</p>
-
-**EN:** Original image preview before calling the API; filename and size shown (example: clinical-style palm photo).  
-**中文：** 调用分析前展示原图预览与文件信息（示例为掌心发红明显的实拍图）。
-
-### 3. Waiting for analysis · 等待分析
-
-<p align="center">
-  <img src="docs/images/screenshots/ui-report-waiting.png" alt="Report panel waiting state" width="520" />
-</p>
-
-**EN:** Right panel placeholder with disclaimer: visual observations + health tips + entertainment palmistry only.  
-**中文：** 右侧报告区占位，并再次说明：仅视觉观察、科普与娱乐手相，非诊断。
-
-### 4. Composite overlay · 综合叠加图
-
-<p align="center">
-  <img src="docs/images/screenshots/ui-overlay-report.png" alt="Composite overlay visualization" width="520" />
-</p>
-
-**EN:** MediaPipe/outlined palm ROI, line edges, and redness highlight on the detected region.  
-**中文：** 显示检测方法（如 MediaPipe Hands）、掌心多边形、掌纹边缘与发红区域叠加。
-
-### 5. Palm-line enhancement · 掌纹增强
-
-<p align="center">
-  <img src="docs/images/screenshots/ui-line-enhanced.png" alt="Enhanced palm line image" width="520" />
-</p>
-
-**EN:** Local contrast boost to make creases visible for texture/clarity scoring.  
-**中文：** 局部对比度增强，突出掌纹边缘，用于「掌纹评分」与清晰度说明。
-
-### 6. Red heatmap · 红色热力图
-
-<p align="center">
-  <img src="docs/images/screenshots/ui-red-heatmap.png" alt="Red saturation heatmap" width="520" />
-</p>
-
-**EN:** Heatmap of high-saturation red pixels—color feature only, not a diagnosis.  
-**中文：** 高饱和红色像素分布热力图，仅描述照片中的颜色特征。
-
-### 7. Analysis scores · 分析分数
-
-<p align="center">
-  <img src="docs/images/screenshots/ui-metrics.png" alt="Metric bars dashboard" width="520" />
-</p>
-
-**EN:** Six bars—detection confidence, palm area %, brightness, redness index/ratio, palm-line score.  
-**中文：** 六项进度条：检测参考、掌心占比、画面亮度、发红指数、发红占比、掌纹评分。
-
-### 8. Health report details · 健康分析详情
-
-<p align="center">
-  <img src="docs/images/screenshots/ui-health-details.png" alt="Health education report sections" width="520" />
-</p>
-
-**EN:** Pale/red/texture cards, **Possible directions** (educational), lifestyle notes—always with doctor-consult reminders.  
-**中文：** 偏淡/发红/掌纹解读、可能相关健康方向（科普）、生活建议等；强调持续不适应咨询医生。
-
-Toggle **Entertainment palmistry · 趣味手相** in the app for life/head/heart/career line cards (entertainment only).
+</details>
 
 ---
 
