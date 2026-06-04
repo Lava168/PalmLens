@@ -1,7 +1,9 @@
+import { useState } from "react";
 import {
   AlertTriangle,
   BadgeInfo,
   Eye,
+  Fingerprint,
   HeartPulse,
   ScanLine,
   ShieldCheck,
@@ -15,6 +17,8 @@ type ReportViewProps = {
 };
 
 export function ReportView({ report }: ReportViewProps) {
+  const [mode, setMode] = useState<"health" | "palmistry">("health");
+
   if (!report) {
     return (
       <section className="glass-panel flex min-h-[560px] flex-col justify-between rounded-[8px] p-6 md:p-8">
@@ -37,7 +41,7 @@ export function ReportView({ report }: ReportViewProps) {
         </div>
 
         <div className="rounded-[8px] border border-coral/20 bg-white/60 p-4 text-sm leading-6 text-mineral">
-          PalmLens 输出图像视觉观察和健康科普提示，不输出疾病名称、诊断结论或治疗建议。
+          PalmLens 输出图像视觉观察、健康科普提示和娱乐性质手相解读；不输出疾病名称、诊断结论或治疗建议。
         </div>
       </section>
     );
@@ -78,7 +82,9 @@ export function ReportView({ report }: ReportViewProps) {
           </div>
           <div>
             <p className="text-sm font-semibold uppercase text-clay">Visual report</p>
-            <h2 className="text-2xl font-semibold text-ink">非诊断型健康提示</h2>
+            <h2 className="text-2xl font-semibold text-ink">
+              {mode === "health" ? "非诊断型健康提示" : "趣味手相解读"}
+            </h2>
           </div>
         </div>
         <div className="inline-flex w-fit items-center gap-2 rounded-[8px] border border-sage/50 bg-white/65 px-3 py-1.5 text-sm font-medium text-mineral">
@@ -154,6 +160,33 @@ export function ReportView({ report }: ReportViewProps) {
         </div>
 
         <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-2 rounded-[8px] border border-sage/25 bg-white/58 p-1.5">
+            <button
+              className={[
+                "focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-[6px] text-sm font-semibold transition",
+                mode === "health" ? "bg-ink text-white" : "text-mineral hover:bg-white/70 hover:text-ink"
+              ].join(" ")}
+              onClick={() => setMode("health")}
+              type="button"
+            >
+              <HeartPulse className="size-4" aria-hidden="true" />
+              健康分析
+            </button>
+            <button
+              className={[
+                "focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-[6px] text-sm font-semibold transition",
+                mode === "palmistry" ? "bg-ink text-white" : "text-mineral hover:bg-white/70 hover:text-ink"
+              ].join(" ")}
+              onClick={() => setMode("palmistry")}
+              type="button"
+            >
+              <Fingerprint className="size-4" aria-hidden="true" />
+              趣味手相
+            </button>
+          </div>
+
+          {mode === "health" ? (
+            <>
           <div>
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
               <Sparkles className="size-4 text-coral" aria-hidden="true" />
@@ -193,6 +226,68 @@ export function ReportView({ report }: ReportViewProps) {
               ))}
             </div>
           </div>
+            </>
+          ) : (
+            <div className="space-y-5">
+              <div className="rounded-[8px] border border-sage/25 bg-white/58 p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                    <Fingerprint className="size-4 text-sage" aria-hidden="true" />
+                    Palm reading
+                  </div>
+                  <span className="rounded-[6px] bg-celadon/70 px-2.5 py-1 text-xs font-semibold text-mineral">
+                    {report.palmistry.confidence_label}
+                  </span>
+                </div>
+                <h3 className="mt-3 text-lg font-semibold text-ink">{report.palmistry.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-mineral">{report.palmistry.summary}</p>
+                <div className="mt-4">
+                  <MetricBar
+                    label="娱乐可读性"
+                    value={`${report.palmistry.confidence_score.toFixed(0)}`}
+                    percent={report.palmistry.confidence_score}
+                    tone="pollen"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                {report.palmistry.lines.map((item) => (
+                  <div key={item.name} className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-sm font-semibold text-ink">{item.name}</h3>
+                        <p className="mt-1 text-xs font-semibold text-clay">{item.theme}</p>
+                      </div>
+                      <span className="shrink-0 rounded-[6px] bg-ink px-2.5 py-1 text-xs font-semibold text-white">
+                        {item.score.toFixed(0)}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-mineral">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                {report.palmistry.lifestyle_notes.map((item) => (
+                  <div key={item} className="rounded-[8px] border border-pollen/45 bg-white/58 p-4">
+                    <div className="flex items-center gap-2">
+                      <BadgeInfo className="size-4 text-sage" aria-hidden="true" />
+                      <p className="text-sm leading-6 text-mineral">{item}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-[8px] border border-coral/25 bg-coral/10 p-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="size-4 text-coral" aria-hidden="true" />
+                  <h3 className="text-sm font-semibold text-ink">娱乐声明</h3>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-mineral">{report.palmistry.disclaimer}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>

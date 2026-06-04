@@ -13,6 +13,7 @@ DISCLAIMER = (
     "PalmLens 仅分析照片中的视觉特征并给出健康科普提示，"
     "不构成医学诊断、疾病筛查、治疗建议或用药建议。"
 )
+PALMISTRY_DISCLAIMER = "手相解读模块仅基于掌纹视觉特征生成娱乐化文本，不具有预测、判断性格或指导人生决策的作用。"
 
 
 class AnalyzerError(ValueError):
@@ -43,6 +44,7 @@ def analyze_palm_image(image_bytes: bytes) -> dict[str, Any]:
         lines=lines,
         image_shape=image.shape,
     )
+    palmistry = _build_palmistry_reading(color=color, redness=redness, lines=lines, palm_ratio=_mask_area_ratio(mask))
 
     return {
         "image": {
@@ -80,6 +82,7 @@ def analyze_palm_image(image_bytes: bytes) -> dict[str, Any]:
         },
         "observations": observations,
         "tips": tips,
+        "palmistry": palmistry,
         "flags": flags,
         "disclaimer": DISCLAIMER,
     }
@@ -568,6 +571,122 @@ def _build_report(
     )
 
     return observations, tips, flags
+
+
+def _build_palmistry_reading(
+    color: dict[str, Any],
+    redness: dict[str, Any],
+    lines: dict[str, Any],
+    palm_ratio: float,
+) -> dict[str, Any]:
+    clarity = float(lines["clarity_score"])
+    edge_density = float(lines["edge_density"])
+    brightness = float(color["mean_brightness"])
+    redness_index = float(color["redness_index"])
+
+    if clarity >= 66:
+        line_style = "线条清晰、层次感较强"
+        energy_word = "稳定"
+    elif clarity >= 40:
+        line_style = "线条有一定可见度"
+        energy_word = "均衡"
+    else:
+        line_style = "线条偏柔和"
+        energy_word = "松弛"
+
+    if brightness >= 0.72:
+        color_mood = "画面明亮，整体氛围显得轻快"
+    elif brightness >= 0.46:
+        color_mood = "画面亮度适中，视觉氛围比较平衡"
+    else:
+        color_mood = "画面偏暗，解读会更偏向保守"
+
+    if redness["attention_level"] == "明显":
+        color_note = "红色区域更醒目，娱乐解读里会被视作行动感较强的视觉符号"
+    elif redness["attention_level"] == "轻度":
+        color_note = "局部暖色略有存在，娱乐解读里会被视作表达欲或热情的点缀"
+    else:
+        color_note = "红色区域不突出，娱乐解读里会被视作节奏较稳的视觉符号"
+
+    confidence = float(np.clip(clarity * 0.55 + min(edge_density / 0.08, 1) * 24 + min(palm_ratio / 0.22, 1) * 21, 0, 100))
+
+    return {
+        "title": "趣味手相解读",
+        "summary": f"这张手掌照片中，掌纹呈现{line_style}，{color_mood}；{color_note}。",
+        "confidence_label": _palmistry_confidence_label(confidence),
+        "confidence_score": round(confidence, 1),
+        "disclaimer": PALMISTRY_DISCLAIMER,
+        "lines": [
+            {
+                "name": "生命线",
+                "score": round(float(np.clip(clarity * 0.5 + brightness * 30 + palm_ratio * 90, 0, 100)), 1),
+                "theme": f"{energy_word}感",
+                "detail": _palmistry_life_line(clarity, brightness, palm_ratio),
+            },
+            {
+                "name": "智慧线",
+                "score": round(float(np.clip(clarity * 0.62 + min(edge_density / 0.08, 1) * 38, 0, 100)), 1),
+                "theme": "思考节奏",
+                "detail": _palmistry_head_line(clarity, edge_density),
+            },
+            {
+                "name": "感情线",
+                "score": round(float(np.clip(clarity * 0.45 + redness_index * 34 + brightness * 21, 0, 100)), 1),
+                "theme": "表达温度",
+                "detail": _palmistry_heart_line(redness["attention_level"], redness_index, brightness),
+            },
+            {
+                "name": "事业线",
+                "score": round(float(np.clip(clarity * 0.54 + min(edge_density / 0.1, 1) * 26 + (1 - abs(brightness - 0.62)) * 20, 0, 100)), 1),
+                "theme": "推进方式",
+                "detail": _palmistry_career_line(clarity, edge_density, color["tone"]),
+            },
+        ],
+        "lifestyle_notes": [
+            "把这部分当成互动娱乐卡片，适合截图分享，不用于做现实判断。",
+            "若想得到更清晰的手相卡片，可在自然光下平展掌心并避免强反光。",
+        ],
+    }
+
+
+def _palmistry_confidence_label(score: float) -> str:
+    if score >= 72:
+        return "图像可读性较高"
+    if score >= 48:
+        return "图像可读性中等"
+    return "图像可读性偏弱"
+
+
+def _palmistry_life_line(clarity: float, brightness: float, palm_ratio: float) -> str:
+    if clarity >= 66 and palm_ratio >= 0.12:
+        return "娱乐解读中，生命线呈现清楚而有支撑的观感，像是偏稳定、能量续航感不错的设定。"
+    if brightness < 0.42:
+        return "画面偏暗，生命线细节不够充分，娱乐解读更适合描述为慢热、需要留白的节奏。"
+    return "生命线细节呈现中等，娱乐解读里可理解为节奏平稳，适合持续积累型的状态。"
+
+
+def _palmistry_head_line(clarity: float, edge_density: float) -> str:
+    if clarity >= 60 and edge_density >= 0.045:
+        return "智慧线的纹理感较丰富，娱乐解读里像是思路活跃、善于拆解问题的设定。"
+    if clarity < 38:
+        return "智慧线在照片中偏柔和，娱乐解读更接近直觉派、先感受再整理的风格。"
+    return "智慧线可见度适中，娱乐解读里适合描述为理性与直觉之间比较平衡。"
+
+
+def _palmistry_heart_line(attention_level: str, redness_index: float, brightness: float) -> str:
+    if attention_level == "明显" or redness_index >= 0.34:
+        return "感情线区域的暖色存在感较强，娱乐解读里像是表达直接、情绪能量比较外放。"
+    if brightness >= 0.72:
+        return "画面明亮，感情线在娱乐解读里显得轻快、开放，适合温和但不沉闷的表达。"
+    return "感情线呈现克制的视觉氛围，娱乐解读里可理解为慢热、重视安全感。"
+
+
+def _palmistry_career_line(clarity: float, edge_density: float, tone: str) -> str:
+    if clarity >= 62 and edge_density >= 0.042:
+        return "事业线相关纹理更有方向感，娱乐解读里像是目标感较明确、推进力较强。"
+    if tone == "光线偏暗":
+        return "当前光线让事业线不够突出，娱乐解读更适合描述为低调积累、先观察再行动。"
+    return "事业线呈现中性观感，娱乐解读里适合写成稳步推进、靠长期习惯建立优势。"
 
 
 def _mask_area_ratio(mask: np.ndarray) -> float:

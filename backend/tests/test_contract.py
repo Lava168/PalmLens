@@ -22,6 +22,10 @@ class ContractTest(unittest.TestCase):
         self.assertTrue(report["image"]["overlay_image"].startswith("data:image/png;base64,"))
         self.assertTrue(report["image"]["line_enhanced_image"].startswith("data:image/png;base64,"))
         self.assertTrue(report["image"]["red_heatmap_image"].startswith("data:image/png;base64,"))
+        self.assertIn("palmistry", report)
+        self.assertEqual(len(report["palmistry"]["lines"]), 4)
+        self.assertIn("仅", report["palmistry"]["disclaimer"])
+        self.assertIn("娱乐", report["palmistry"]["disclaimer"])
 
 
 if __name__ == "__main__":

@@ -40,6 +40,20 @@ export type PalmLensReport = {
   };
   observations: ReportItem[];
   tips: ReportItem[];
+  palmistry: {
+    title: string;
+    summary: string;
+    confidence_label: string;
+    confidence_score: number;
+    disclaimer: string;
+    lines: Array<{
+      name: string;
+      score: number;
+      theme: string;
+      detail: string;
+    }>;
+    lifestyle_notes: string[];
+  };
   flags: string[];
   disclaimer: string;
 };
