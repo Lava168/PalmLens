@@ -9,11 +9,17 @@ from typing import Any
 import cv2
 import numpy as np
 
+from .deepseek_enhancer import enhance_with_deepseek
+
 DISCLAIMER = (
     "PalmLens 仅分析照片中的视觉特征并给出健康科普提示，"
     "不构成医学诊断、疾病筛查、治疗建议或用药建议。"
 )
 PALMISTRY_DISCLAIMER = "手相解读模块仅基于掌纹视觉特征生成娱乐化文本，不具有预测、判断性格或指导人生决策的作用。"
+SKIN_SCREENING_DISCLAIMER = (
+    "皮肤可见特征提示仅基于照片中的颜色、纹理和局部分布生成科普提醒，"
+    "不能识别、诊断或排除皮肤病、传染病或感染。"
+)
 
 
 class AnalyzerError(ValueError):
@@ -49,8 +55,9 @@ def analyze_palm_image(image_bytes: bytes) -> dict[str, Any]:
         texture_result=_health_texture_scores(lines=lines, palm_ratio=_mask_area_ratio(mask)),
     )
     palmistry = _build_palmistry_reading(color=color, redness=redness, lines=lines, palm_ratio=_mask_area_ratio(mask))
+    skin_screening = _build_skin_screening(color=color, redness=redness, lines=lines)
 
-    return {
+    report = {
         "image": {
             "width": int(image.shape[1]),
             "height": int(image.shape[0]),
@@ -88,9 +95,12 @@ def analyze_palm_image(image_bytes: bytes) -> dict[str, Any]:
         "tips": tips,
         "health_suggestions": health_suggestions,
         "palmistry": palmistry,
+        "skin_screening": skin_screening,
         "flags": flags,
         "disclaimer": DISCLAIMER,
     }
+    report["ai_enhancement"] = enhance_with_deepseek(report)
+    return report
 
 
 def _decode_image(image_bytes: bytes) -> np.ndarray:
@@ -1024,6 +1034,113 @@ def _build_palmistry_reading(
             "把这部分当成互动娱乐卡片，适合截图分享，不用于做现实判断。",
             "若想得到更清晰的手相卡片，可在自然光下平展掌心并避免强反光。",
         ],
+    }
+
+
+def _build_skin_screening(color: dict[str, Any], redness: dict[str, Any], lines: dict[str, Any]) -> dict[str, Any]:
+    redness_area = float(redness["area_ratio"])
+    largest_patch = float(redness["largest_patch_ratio"])
+    patch_count = int(redness["patch_count"])
+    redness_index = float(color["redness_index"])
+    clarity = float(lines["clarity_score"])
+
+    inflammation_score = float(np.clip(redness_area * 430 + largest_patch * 260 + redness_index * 42, 0, 100))
+    distribution_score = float(np.clip(patch_count * 18 + largest_patch * 320, 0, 100))
+    texture_score = float(np.clip((100 - clarity) * 0.45 + redness_area * 160, 0, 100))
+    infection_attention_score = float(np.clip(inflammation_score * 0.55 + distribution_score * 0.3 + texture_score * 0.15, 0, 100))
+
+    if infection_attention_score >= 68:
+        attention_level = "需要关注"
+        summary = "照片中存在较明显的局部红色或斑块样视觉特征，建议结合现实症状谨慎观察。"
+    elif infection_attention_score >= 38:
+        attention_level = "轻度关注"
+        summary = "照片中可见一定局部红色或纹理变化，可能受光线、摩擦、按压或皮肤状态影响。"
+    else:
+        attention_level = "低关注"
+        summary = "当前照片未显示明显需要高度关注的皮肤可见特征，但照片不能排除现实皮肤问题。"
+
+    visible_findings = [
+        {
+            "title": "局部红色区域",
+            "level": _score_level(inflammation_score),
+            "detail": (
+                f"红色高饱和区域约占掌心 {redness_area * 100:.1f}%，较大色块约占 "
+                f"{largest_patch * 100:.1f}%。这只表示照片中的颜色分布，不等同于感染或皮肤病。"
+            ),
+        },
+        {
+            "title": "斑块分布",
+            "level": _score_level(distribution_score),
+            "detail": (
+                f"检测到可参考斑块 {patch_count} 处。多个小红点、片状发红或边界清楚的红斑，"
+                "在现实中可能与摩擦、过敏、刺激、虫咬或感染等多种情况相似，需要结合症状判断。"
+            ),
+        },
+        {
+            "title": "纹理与清晰度",
+            "level": _score_level(texture_score),
+            "detail": (
+                f"掌纹清晰度为 {clarity:.0f}/100。照片无法可靠识别脱屑、水疱、渗液、结痂等细节，"
+                "如现实中存在这些表现，应优先线下咨询医生。"
+            ),
+        },
+    ]
+
+    possible_visual_patterns = [
+        {
+            "name": "刺激或摩擦样发红",
+            "basis": "局部红色区域、掌心按压、洗手液/清洁剂刺激、运动后充血都可能造成相似外观。",
+            "non_diagnostic_note": "PalmLens 不能判断具体原因，只能提示该外观值得结合近期接触史观察。",
+        },
+        {
+            "name": "皮疹样视觉特征",
+            "basis": "如果现实中同时有成片红斑、小疹点、瘙痒、脱屑或边界变化，照片外观可能更接近皮疹类表现。",
+            "non_diagnostic_note": "皮疹原因很多，不能通过单张照片判断是否为皮肤病或传染病。",
+        },
+        {
+            "name": "感染相关红旗外观",
+            "basis": "快速扩大、明显疼痛、发热、肿胀、流脓、红线向上延伸或伴随发烧，属于需要尽快就医的现实症状。",
+            "non_diagnostic_note": "这些是安全红旗提示，不代表本次照片已经识别出感染。",
+        },
+    ]
+
+    hygiene_guidance = [
+        "如果现实中有破溃、渗液、流脓、水疱或不明原因皮疹，避免抓挠，保持局部清洁干燥。",
+        "在原因不明、伴随发热或皮疹快速扩散时，减少与他人共用毛巾、手套、餐具等直接接触物品。",
+        "如果近期接触过已知传染性皮疹人群，或手部皮疹伴随发热、全身不适，应尽快咨询医生。",
+        "不要根据照片自行使用抗生素、激素药膏或消毒刺激性很强的产品。"
+    ]
+
+    seek_care_if = [
+        "红色区域快速扩大，或伴随明显疼痛、发热、肿胀、跳痛。",
+        "出现水疱、流脓、渗液、结痂、皮肤破溃、红线向手臂延伸。",
+        "同时出现发烧、寒战、乏力、淋巴结肿大或全身皮疹。",
+        "皮疹原因不明且可能接触过传染性皮肤病患者，或家人/同住者出现相似皮疹。",
+        "儿童、孕期、免疫力较低人群，或有糖尿病等基础情况时出现持续皮肤异常。"
+    ]
+
+    photo_limitations = [
+        "单张手掌照片无法可靠分辨过敏、湿疹、真菌感染、细菌感染、病毒性皮疹等具体原因。",
+        "光线、白平衡、滤镜、按压、洗热水澡、运动、饮酒和手部温度都会影响红色区域。",
+        "如果要复拍，建议在自然光下拍摄掌心和手背，并记录是否疼痛、瘙痒、发热、脱屑或渗液。",
+    ]
+
+    return {
+        "title": "皮肤可见特征提示",
+        "attention_level": attention_level,
+        "summary": summary,
+        "scores": {
+            "inflammation": round(inflammation_score, 1),
+            "distribution": round(distribution_score, 1),
+            "texture": round(texture_score, 1),
+            "infection_attention": round(infection_attention_score, 1),
+        },
+        "visible_findings": visible_findings,
+        "possible_visual_patterns": possible_visual_patterns,
+        "hygiene_guidance": hygiene_guidance,
+        "seek_care_if": seek_care_if,
+        "photo_limitations": photo_limitations,
+        "disclaimer": SKIN_SCREENING_DISCLAIMER,
     }
 
 

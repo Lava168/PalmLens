@@ -45,9 +45,9 @@
 
 ### What is PalmLens? · 这是什么？
 
-**EN:** PalmLens is a full-stack web app that turns a single palm photograph into an interactive, **non-diagnostic** visual report. The frontend (Next.js) handles upload, preview, and bilingual-friendly UI; the backend (FastAPI + OpenCV + MediaPipe) locates the palm, quantifies color and texture, renders three explanation images, and returns structured JSON for health education and optional entertainment palmistry.
+**EN:** PalmLens is a full-stack web app that turns a single palm photograph into an interactive, **non-diagnostic** visual report. The frontend (Next.js) handles upload, preview, and bilingual-friendly UI; the backend (FastAPI + OpenCV + MediaPipe) locates the palm, quantifies color and texture, renders three explanation images, and returns structured JSON for health education, optional entertainment palmistry, and optional DeepSeek text enhancement.
 
-**中文：** PalmLens 是一个全栈 Web 应用：用户上传一张手掌照片，系统生成一份**非诊断型**互动视觉报告。前端（Next.js）负责上传、预览与报告展示；后端（FastAPI + OpenCV + MediaPipe）定位掌心、量化颜色与纹理、输出三张解释图，并以 JSON 形式返回健康科普与可选的趣味手相内容。
+**中文：** PalmLens 是一个全栈 Web 应用：用户上传一张手掌照片，系统生成一份**非诊断型**互动视觉报告。前端（Next.js）负责上传、预览与报告展示；后端（FastAPI + OpenCV + MediaPipe）定位掌心、量化颜色与纹理、输出三张解释图，并以 JSON 形式返回健康科普、可选的趣味手相内容和可选的 DeepSeek 文案增强。
 
 ### Who is it for? · 适合谁？
 
@@ -59,9 +59,9 @@
 
 ### What it is NOT · 明确不做的事
 
-**EN:** Not a medical device. No disease names, no diagnosis, no prescriptions. Palmistry is labeled as entertainment only.
+**EN:** Not a medical device. No diagnosis, no prescriptions, no confirmation or exclusion of skin disease or infectious disease. Palmistry is labeled as entertainment only.
 
-**中文：** 不是医疗器械。不输出疾病名称、不做诊断、不给处方。手相模块标注为娱乐用途。
+**中文：** 不是医疗器械。不做诊断、不给处方，不能确认或排除皮肤病、传染病。手相模块标注为娱乐用途。
 
 ### How it works · 工作原理
 
@@ -74,15 +74,18 @@ flowchart LR
   D --> E[Overlays + heatmap<br/>叠加图与热力图]
   D --> F[Health suggestions<br/>健康科普]
   D --> G[Palmistry cards<br/>趣味手相]
+  F --> I[DeepSeek text enhancement<br/>DeepSeek 文案增强]
+  G --> I
   E --> H[Next.js report UI<br/>前端报告页]
   F --> H
   G --> H
+  I --> H
 ```
 
 1. **Upload · 上传** — JPG / PNG / WebP, max 8 MB, local preview before submit.  
 2. **Analyze · 分析** — `POST /analyze` runs palm detection, color stats, redness patches, line clarity.  
 3. **Visualize · 可视化** — Overlay (ROI + edges + redness), line-enhanced view, red saturation heatmap.  
-4. **Report · 报告** — Scores, health education blocks, recheck tips; switch to palmistry mode for detailed entertainment line cards.
+4. **Report · 报告** — Scores, DeepSeek enhancement block, health education blocks, recheck tips; switch to palmistry mode for detailed entertainment line cards.
 
 ### Repository layout · 目录结构
 
@@ -129,6 +132,8 @@ PalmLens/
 - `POST /analyze` returns JSON: images (base64), metrics, observations, tips, `health_suggestions`, `palmistry`.
 - Three derived images: overlay, line-enhanced, red heatmap.
 - Health mode: attention level, color/redness/texture copy, quality notes, recheck plan, when to see a doctor.
+- Skin visual feature mode: redness distribution, rash-like visual patterns, hygiene reminders, and urgent-care red flags; not a skin disease or infectious disease diagnosis.
+- DeepSeek enhancement: optional AI copy layer for health education and palmistry text; no API key required for local preview.
 - Palmistry mode: archetype, keywords, four detailed line cards, relationship/work/daily rhythm prompts, photo tips, share copy—entertainment disclaimer included.
 - Detection: MediaPipe Hands first; OpenCV skin segmentation fallback.
 
@@ -158,6 +163,14 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
+Optional DeepSeek enhancement:
+
+```bash
+export DEEPSEEK_API_KEY=your_key
+export DEEPSEEK_MODEL=deepseek-v4-flash
+# Without a key, PalmLens shows a local enhancement preview instead of calling DeepSeek.
+```
+
 **Frontend:**
 
 ```bash
@@ -182,7 +195,7 @@ cd frontend && npm run lint && npm run build
 | Frontend | Vercel | Root: `frontend` |
 | Backend | Render | `render.yaml`, Docker, `/health` |
 
-Set `NEXT_PUBLIC_API_URL` on Vercel and `ALLOWED_ORIGINS` on Render (comma-separated frontend URLs). Use your own deployment URL — **`https://palmlens.vercel.app` is a different site and is not this repository.**
+Set `NEXT_PUBLIC_API_URL` on Vercel and `ALLOWED_ORIGINS` on Render (comma-separated frontend URLs). To enable DeepSeek on Render, also set `DEEPSEEK_API_KEY` and optionally `DEEPSEEK_MODEL`. Use your own deployment URL — **`https://palmlens.vercel.app` is a different site and is not this repository.**
 
 ### Regenerate analyzer preview images
 
@@ -208,6 +221,8 @@ Optional custom red-region model (e.g. YOLO); keep non-diagnostic disclaimers an
 - `POST /analyze` 返回完整 JSON：图像（base64）、指标、观察项、提示、`health_suggestions`、`palmistry`。
 - 三张衍生图：综合叠加、掌纹增强、红色热力图。
 - **健康分析**：视觉关注等级、掌色/发红/掌纹说明、图片质量、复查计划、何时建议就医。
+- **皮肤可见特征**：局部红色分布、皮疹样视觉特征、传染风险注意和尽快就医红旗；不作为皮肤病或传染病诊断。
+- **DeepSeek 增强**：可选 AI 文案层，用于把结构化视觉指标改写为更自然的健康科普和趣味手相说明；没有 API Key 时显示本地预览。
 - **趣味手相**：原型、关键词、四条线详细卡片、关系表达、工作节奏、日常状态、拍摄建议、分享文案；含娱乐声明。
 - 手掌检测优先 MediaPipe Hands，失败时用 OpenCV 肤色分割兜底。
 
@@ -237,6 +252,14 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
+可选 DeepSeek 增强：
+
+```bash
+export DEEPSEEK_API_KEY=你的_key
+export DEEPSEEK_MODEL=deepseek-v4-flash
+# 未配置 key 时，PalmLens 会显示本地增强预览，不会调用 DeepSeek。
+```
+
 **前端：**
 
 ```bash
@@ -261,7 +284,7 @@ cd frontend && npm run lint && npm run build
 | 前端 | Vercel | 根目录 `frontend` |
 | 后端 | Render | `render.yaml` + Docker，`/health` |
 
-Vercel 配置 `NEXT_PUBLIC_API_URL`；Render 配置 `ALLOWED_ORIGINS`（多个域名英文逗号分隔）。本地 `localhost:3000` 默认已放行。
+Vercel 配置 `NEXT_PUBLIC_API_URL`；Render 配置 `ALLOWED_ORIGINS`（多个域名英文逗号分隔）。如需启用 DeepSeek，在 Render 额外配置 `DEEPSEEK_API_KEY`，可选配置 `DEEPSEEK_MODEL`。本地 `localhost:3000` 默认已放行。
 
 部署后使用你自己的 Vercel 域名（不要使用他人占用的 `palmlens.vercel.app`，该站点与本文库无关）。
 

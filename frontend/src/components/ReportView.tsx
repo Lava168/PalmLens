@@ -193,6 +193,53 @@ export function ReportView({ report }: ReportViewProps) {
 
           {mode === "health" ? (
             <>
+              <div className="rounded-[8px] border border-pollen/45 bg-white/62 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                    <Sparkles className="size-4 text-coral" aria-hidden="true" />
+                    AI 增强
+                  </div>
+                  <span
+                    className={[
+                      "w-fit rounded-[6px] px-2.5 py-1 text-xs font-semibold",
+                      report.ai_enhancement.status === "generated"
+                        ? "bg-sage/15 text-sage"
+                        : report.ai_enhancement.status === "safety_fallback"
+                          ? "bg-coral/10 text-clay"
+                          : "bg-pollen/20 text-clay"
+                    ].join(" ")}
+                  >
+                    {report.ai_enhancement.status_label}
+                  </span>
+                </div>
+                <h3 className="mt-3 text-lg font-semibold text-ink">{report.ai_enhancement.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-mineral">{report.ai_enhancement.summary}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-[6px] border border-sage/25 bg-white/65 px-2.5 py-1 text-xs font-semibold text-mineral">
+                    {report.ai_enhancement.provider}
+                  </span>
+                  <span className="rounded-[6px] border border-sage/25 bg-white/65 px-2.5 py-1 text-xs font-semibold text-mineral">
+                    {report.ai_enhancement.model}
+                  </span>
+                  <span className="rounded-[6px] border border-sage/25 bg-white/65 px-2.5 py-1 text-xs font-semibold text-mineral">
+                    {report.ai_enhancement.source === "ai_api" ? "API 生成" : "本地预览"}
+                  </span>
+                </div>
+                {report.ai_enhancement.error_message ? (
+                  <p className="mt-3 rounded-[6px] border border-coral/20 bg-coral/10 px-3 py-2 text-xs leading-5 text-clay">
+                    {report.ai_enhancement.error_message}
+                  </p>
+                ) : null}
+                <div className="mt-4 grid gap-3">
+                  <AiEnhancementBlock title="健康科普增强" items={report.ai_enhancement.health_insights} />
+                  <AiEnhancementBlock title="趣味手相增强" items={report.ai_enhancement.palmistry_story} />
+                  <AiEnhancementBlock title="下一步建议" items={report.ai_enhancement.next_steps} />
+                </div>
+                <p className="mt-4 border-t border-sage/20 pt-3 text-xs leading-5 text-mineral">
+                  {report.ai_enhancement.safety_note}
+                </p>
+              </div>
+
               <div className="rounded-[8px] border border-sage/25 bg-white/58 p-4">
                 <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
                   <Sparkles className="size-4 text-coral" aria-hidden="true" />
@@ -266,6 +313,89 @@ export function ReportView({ report }: ReportViewProps) {
                     <p key={item} className="text-sm leading-6 text-mineral">{item}</p>
                   ))}
                 </div>
+              </div>
+
+              <div className="rounded-[8px] border border-coral/20 bg-white/58 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                    <AlertTriangle className="size-4 text-coral" aria-hidden="true" />
+                    皮肤可见特征
+                  </div>
+                  <span className="w-fit rounded-[6px] bg-coral/10 px-2.5 py-1 text-xs font-semibold text-clay">
+                    {report.skin_screening.attention_level}
+                  </span>
+                </div>
+                <h3 className="mt-3 text-lg font-semibold text-ink">{report.skin_screening.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-mineral">{report.skin_screening.summary}</p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <MetricBar
+                    label="刺激/炎症样外观"
+                    value={`${report.skin_screening.scores.inflammation.toFixed(0)}`}
+                    percent={report.skin_screening.scores.inflammation}
+                    tone={report.skin_screening.scores.inflammation > 65 ? "coral" : "pollen"}
+                  />
+                  <MetricBar
+                    label="斑块分布"
+                    value={`${report.skin_screening.scores.distribution.toFixed(0)}`}
+                    percent={report.skin_screening.scores.distribution}
+                    tone="pollen"
+                  />
+                  <MetricBar
+                    label="纹理可疑度"
+                    value={`${report.skin_screening.scores.texture.toFixed(0)}`}
+                    percent={report.skin_screening.scores.texture}
+                    tone="sage"
+                  />
+                  <MetricBar
+                    label="感染红旗关注"
+                    value={`${report.skin_screening.scores.infection_attention.toFixed(0)}`}
+                    percent={report.skin_screening.scores.infection_attention}
+                    tone={report.skin_screening.scores.infection_attention > 65 ? "coral" : "pollen"}
+                  />
+                </div>
+                <div className="mt-4 grid gap-3">
+                  {report.skin_screening.visible_findings.map((item) => (
+                    <div key={item.title} className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <h4 className="text-sm font-semibold text-ink">{item.title}</h4>
+                        <span className="rounded-[6px] bg-celadon/70 px-2.5 py-1 text-xs font-semibold text-mineral">
+                          {item.level}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-mineral">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <BadgeInfo className="size-4 text-sage" aria-hidden="true" />
+                  皮肤科普方向
+                </div>
+                <div className="space-y-3">
+                  {report.skin_screening.possible_visual_patterns.map((item) => (
+                    <div key={item.name} className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                      <h3 className="text-sm font-semibold text-ink">{item.name}</h3>
+                      <p className="mt-2 text-sm leading-6 text-mineral">{item.basis}</p>
+                      <p className="mt-2 text-xs leading-5 text-clay">{item.non_diagnostic_note}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <SkinInfoBlock title="传染风险注意" items={report.skin_screening.hygiene_guidance} />
+                <SkinInfoBlock title="建议尽快就医情况" items={report.skin_screening.seek_care_if} tone="coral" />
+                <SkinInfoBlock title="拍摄与识别限制" items={report.skin_screening.photo_limitations} />
+              </div>
+
+              <div className="rounded-[8px] border border-coral/25 bg-coral/10 p-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="size-4 text-coral" aria-hidden="true" />
+                  <h3 className="text-sm font-semibold text-ink">皮肤提示边界</h3>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-mineral">{report.skin_screening.disclaimer}</p>
               </div>
 
               <div className="grid gap-3">
@@ -589,5 +719,41 @@ export function ReportView({ report }: ReportViewProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+function AiEnhancementBlock({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+      <h4 className="text-sm font-semibold text-ink">{title}</h4>
+      <div className="mt-3 space-y-2">
+        {items.map((item) => (
+          <div key={item} className="flex gap-2">
+            <Sparkles className="mt-1 size-3.5 shrink-0 text-pollen" aria-hidden="true" />
+            <p className="text-sm leading-6 text-mineral">{item}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SkinInfoBlock({ title, items, tone = "sage" }: { title: string; items: string[]; tone?: "sage" | "coral" }) {
+  return (
+    <div className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+      <h4 className="text-sm font-semibold text-ink">{title}</h4>
+      <div className="mt-3 space-y-2">
+        {items.map((item) => (
+          <div key={item} className="flex gap-2">
+            {tone === "coral" ? (
+              <AlertTriangle className="mt-1 size-3.5 shrink-0 text-coral" aria-hidden="true" />
+            ) : (
+              <BadgeInfo className="mt-1 size-3.5 shrink-0 text-sage" aria-hidden="true" />
+            )}
+            <p className="text-sm leading-6 text-mineral">{item}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -99,6 +99,45 @@ export type PalmLensReport = {
     share_copy: string;
     lifestyle_notes: string[];
   };
+  skin_screening: {
+    title: string;
+    attention_level: string;
+    summary: string;
+    scores: {
+      inflammation: number;
+      distribution: number;
+      texture: number;
+      infection_attention: number;
+    };
+    visible_findings: Array<{
+      title: string;
+      level: string;
+      detail: string;
+    }>;
+    possible_visual_patterns: Array<{
+      name: string;
+      basis: string;
+      non_diagnostic_note: string;
+    }>;
+    hygiene_guidance: string[];
+    seek_care_if: string[];
+    photo_limitations: string[];
+    disclaimer: string;
+  };
+  ai_enhancement: {
+    provider: string;
+    status: "generated" | "not_configured" | "disabled" | "error" | "safety_fallback";
+    status_label: string;
+    source: "ai_api" | "local_template";
+    model: string;
+    title: string;
+    summary: string;
+    health_insights: string[];
+    palmistry_story: string[];
+    next_steps: string[];
+    safety_note: string;
+    error_message?: string | null;
+  };
   flags: string[];
   disclaimer: string;
 };

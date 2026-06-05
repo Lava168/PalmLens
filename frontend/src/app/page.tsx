@@ -71,12 +71,15 @@ export default function Home() {
   async function analyze() {
     if (!file) return;
 
+    await analyzeFile(file);
+  }
+
+  async function analyzeFile(nextFile: File) {
     setIsLoading(true);
     setError(null);
 
     const form = new FormData();
-    form.append("file", file);
-
+    form.append("file", nextFile);
     try {
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 45_000);
@@ -102,6 +105,30 @@ export default function Home() {
         setError("分析失败，请检查后端服务是否已启动。");
       }
     } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function analyzeSample() {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/palm-lens-art.png");
+      const blob = await response.blob();
+      const sampleFile = new File([blob], "palm-lens-sample.png", { type: blob.type || "image/png" });
+      setFile(sampleFile);
+      setPreviewUrl((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return URL.createObjectURL(blob);
+      });
+      await analyzeFile(sampleFile);
+    } catch (reason) {
+      if (reason instanceof Error) {
+        setError(reason.message);
+      } else {
+        setError("示例图分析失败，请稍后再试。");
+      }
       setIsLoading(false);
     }
   }
@@ -242,6 +269,16 @@ export default function Home() {
               >
                 <UploadCloud className="size-4" aria-hidden="true" />
                 选择图片
+              </button>
+
+              <button
+                className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-[8px] border border-pollen/50 bg-white/70 px-5 text-sm font-semibold text-mineral transition hover:border-coral/45 hover:text-clay disabled:cursor-not-allowed disabled:text-mineral/45"
+                disabled={isLoading}
+                onClick={analyzeSample}
+                type="button"
+              >
+                <ImagePlus className="size-4" aria-hidden="true" />
+                使用示例图体验
               </button>
             </div>
 
