@@ -441,6 +441,20 @@ export function ReportView({ report }: ReportViewProps) {
                 </div>
                 <h3 className="mt-3 text-lg font-semibold text-ink">{report.palmistry.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-mineral">{report.palmistry.summary}</p>
+                <div className="mt-4 rounded-[8px] border border-pollen/35 bg-pollen/10 p-3">
+                  <p className="text-xs font-semibold uppercase text-clay">娱乐设定</p>
+                  <p className="mt-1 text-xl font-semibold text-ink">{report.palmistry.archetype}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {report.palmistry.keywords.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-[6px] border border-pollen/45 bg-white/65 px-2.5 py-1 text-xs font-semibold text-mineral"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
                 <div className="mt-4">
                   <MetricBar
                     label="娱乐可读性"
@@ -448,6 +462,20 @@ export function ReportView({ report }: ReportViewProps) {
                     percent={report.palmistry.confidence_score}
                     tone="pollen"
                   />
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                  <Sparkles className="size-4 text-coral" aria-hidden="true" />
+                  娱乐建议
+                </div>
+                <div className="space-y-3">
+                  {report.palmistry.overall_advice.map((item) => (
+                    <div key={item} className="rounded-[8px] border border-sage/25 bg-white/58 p-4">
+                      <p className="text-sm leading-6 text-mineral">{item}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -464,8 +492,78 @@ export function ReportView({ report }: ReportViewProps) {
                       </span>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-mineral">{item.detail}</p>
+                    <div className="mt-4 border-t border-sage/20 pt-3">
+                      <p className="text-xs font-semibold uppercase text-clay">视觉依据</p>
+                      <p className="mt-1 text-sm leading-6 text-mineral">{item.visual_basis}</p>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {item.entertainment_advice.map((advice) => (
+                        <div key={advice} className="flex gap-2">
+                          <Sparkles className="mt-1 size-3.5 shrink-0 text-pollen" aria-hidden="true" />
+                          <p className="text-sm leading-6 text-mineral">{advice}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                    <HeartPulse className="size-4 text-coral" aria-hidden="true" />
+                    关系表达
+                  </div>
+                  <div className="space-y-2">
+                    {report.palmistry.relationship_advice.map((item) => (
+                      <p key={item} className="text-sm leading-6 text-mineral">{item}</p>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                    <ScanLine className="size-4 text-sage" aria-hidden="true" />
+                    工作节奏
+                  </div>
+                  <div className="space-y-2">
+                    {report.palmistry.work_rhythm_advice.map((item) => (
+                      <p key={item} className="text-sm leading-6 text-mineral">{item}</p>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                    <BadgeInfo className="size-4 text-sage" aria-hidden="true" />
+                    日常状态
+                  </div>
+                  <div className="space-y-2">
+                    {report.palmistry.daily_rhythm_advice.map((item) => (
+                      <p key={item} className="text-sm leading-6 text-mineral">{item}</p>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-[8px] border border-white/70 bg-white/58 p-4">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-mineral">
+                    <Eye className="size-4 text-sage" aria-hidden="true" />
+                    拍摄建议
+                  </div>
+                  <div className="space-y-2">
+                    {report.palmistry.photo_tips.map((item) => (
+                      <p key={item} className="text-sm leading-6 text-mineral">{item}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[8px] border border-pollen/45 bg-white/58 p-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-coral" aria-hidden="true" />
+                  <h3 className="text-sm font-semibold text-ink">分享文案</h3>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-mineral">{report.palmistry.share_copy}</p>
               </div>
 
               <div className="space-y-3">

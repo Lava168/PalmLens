@@ -78,6 +78,8 @@ export type PalmLensReport = {
   palmistry: {
     title: string;
     summary: string;
+    archetype: string;
+    keywords: string[];
     confidence_label: string;
     confidence_score: number;
     disclaimer: string;
@@ -86,7 +88,15 @@ export type PalmLensReport = {
       score: number;
       theme: string;
       detail: string;
+      visual_basis: string;
+      entertainment_advice: string[];
     }>;
+    overall_advice: string[];
+    relationship_advice: string[];
+    work_rhythm_advice: string[];
+    daily_rhythm_advice: string[];
+    photo_tips: string[];
+    share_copy: string;
     lifestyle_notes: string[];
   };
   flags: string[];

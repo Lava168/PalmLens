@@ -36,6 +36,17 @@ class ContractTest(unittest.TestCase):
         self.assertIn("不构成医学诊断", report["health_suggestions"]["disclaimer"])
         self.assertIn("palmistry", report)
         self.assertEqual(len(report["palmistry"]["lines"]), 4)
+        self.assertIn("archetype", report["palmistry"])
+        self.assertGreaterEqual(len(report["palmistry"]["keywords"]), 1)
+        self.assertGreaterEqual(len(report["palmistry"]["overall_advice"]), 1)
+        self.assertGreaterEqual(len(report["palmistry"]["relationship_advice"]), 1)
+        self.assertGreaterEqual(len(report["palmistry"]["work_rhythm_advice"]), 1)
+        self.assertGreaterEqual(len(report["palmistry"]["daily_rhythm_advice"]), 1)
+        self.assertGreaterEqual(len(report["palmistry"]["photo_tips"]), 1)
+        self.assertIn("仅供娱乐", report["palmistry"]["share_copy"])
+        for line in report["palmistry"]["lines"]:
+            self.assertIn("visual_basis", line)
+            self.assertGreaterEqual(len(line["entertainment_advice"]), 1)
         self.assertIn("仅", report["palmistry"]["disclaimer"])
         self.assertIn("娱乐", report["palmistry"]["disclaimer"])
 

@@ -82,7 +82,7 @@ flowchart LR
 1. **Upload · 上传** — JPG / PNG / WebP, max 8 MB, local preview before submit.  
 2. **Analyze · 分析** — `POST /analyze` runs palm detection, color stats, redness patches, line clarity.  
 3. **Visualize · 可视化** — Overlay (ROI + edges + redness), line-enhanced view, red saturation heatmap.  
-4. **Report · 报告** — Scores, health education blocks, recheck tips; switch to palmistry mode for fun line cards.
+4. **Report · 报告** — Scores, health education blocks, recheck tips; switch to palmistry mode for detailed entertainment line cards.
 
 ### Repository layout · 目录结构
 
@@ -129,7 +129,7 @@ PalmLens/
 - `POST /analyze` returns JSON: images (base64), metrics, observations, tips, `health_suggestions`, `palmistry`.
 - Three derived images: overlay, line-enhanced, red heatmap.
 - Health mode: attention level, color/redness/texture copy, quality notes, recheck plan, when to see a doctor.
-- Palmistry mode: archetype, keywords, four line cards—entertainment disclaimer included.
+- Palmistry mode: archetype, keywords, four detailed line cards, relationship/work/daily rhythm prompts, photo tips, share copy—entertainment disclaimer included.
 - Detection: MediaPipe Hands first; OpenCV skin segmentation fallback.
 
 ### Tech stack
@@ -208,7 +208,7 @@ Optional custom red-region model (e.g. YOLO); keep non-diagnostic disclaimers an
 - `POST /analyze` 返回完整 JSON：图像（base64）、指标、观察项、提示、`health_suggestions`、`palmistry`。
 - 三张衍生图：综合叠加、掌纹增强、红色热力图。
 - **健康分析**：视觉关注等级、掌色/发红/掌纹说明、图片质量、复查计划、何时建议就医。
-- **趣味手相**：原型、关键词、四条线卡片；含娱乐声明。
+- **趣味手相**：原型、关键词、四条线详细卡片、关系表达、工作节奏、日常状态、拍摄建议、分享文案；含娱乐声明。
 - 手掌检测优先 MediaPipe Hands，失败时用 OpenCV 肤色分割兜底。
 
 ### 技术栈
